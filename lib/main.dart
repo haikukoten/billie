@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:bezier_chart/bezier_chart.dart';
+import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
@@ -27,7 +27,6 @@ class MyApp extends StatelessWidget {
 }
 
 class BillieWallet extends StatelessWidget {
-
   //Key drawerKey = Key("drawer");
   //TODO: Convert to stateful and use scaffoldstate for programmatic drawer opening
 
@@ -73,27 +72,22 @@ class BillieWallet extends StatelessWidget {
           child: CustomScrollView(
             slivers: <Widget>[
               SliverToBoxAdapter(
-                child: Container(
-                    height: 200,
-                    child: ChartWrapper()),
+                child: Container(height: 200, child: ChartWrapper()),
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  height: 150,
-                  padding: EdgeInsets.all(4.0),
-                  child: RecentContactList()
-                ),
+                    height: 150,
+                    padding: EdgeInsets.all(4.0),
+                    child: RecentContactList()),
               ),
               SliverList(
                   delegate: SliverChildBuilderDelegate(
-                      (_, index) =>
-                          HistoryTile(),
+                          (_, index) => HistoryTile(),
                       childCount: 70))
             ],
           ),
         ),
-      )
-      ),
+          )),
     );
   }
 }
@@ -117,7 +111,7 @@ class WalletStatHeader extends SliverPersistentHeaderDelegate {
 
   @override
   // TODO: implement minExtent
-  double get minExtent => 64.0;
+  double get minExtent => 80.0;
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
@@ -127,18 +121,20 @@ class WalletStatHeader extends SliverPersistentHeaderDelegate {
 }
 
 class ChartWrapper extends StatelessWidget {
-
   final fromDate = DateTime(2019, 05, 22);
   final toDate = DateTime.now();
 
   final date1 = DateTime.now().subtract(Duration(days: 2));
   final date2 = DateTime.now().subtract(Duration(days: 3));
+  final date3 = DateTime.now().subtract(Duration(days: 5));
+  final date4 = DateTime.now().subtract(Duration(days: 9));
+
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        color: Colors.red,
+        color: Colors.white,
         height: MediaQuery.of(context).size.height / 2,
         width: MediaQuery.of(context).size.width,
         child: BezierChart(
@@ -149,15 +145,18 @@ class ChartWrapper extends StatelessWidget {
           series: [
             BezierLine(
               label: "Duty",
+              lineColor: Colors.purpleAccent,
               onMissingValue: (dateTime) {
                 if (dateTime.day.isEven) {
-                  return 10.0;
+                  return 20.0;
                 }
                 return 5.0;
               },
               data: [
                 DataPoint<DateTime>(value: 10, xAxis: date1),
-                DataPoint<DateTime>(value: 50, xAxis: date2),
+                DataPoint<DateTime>(value: 20, xAxis: date1),
+                DataPoint<DateTime>(value: 50, xAxis: date3),
+                DataPoint<DateTime>(value: 80, xAxis: date4),
               ],
             ),
           ],
@@ -165,8 +164,12 @@ class ChartWrapper extends StatelessWidget {
             verticalIndicatorStrokeWidth: 3.0,
             verticalIndicatorColor: Colors.black26,
             showVerticalIndicator: true,
+            //xLinesColor: Colors.black45,
+            xAxisTextStyle: TextStyle(
+                color: Colors.black45
+            ),
             verticalIndicatorFixedPosition: false,
-            backgroundColor: Colors.deepPurpleAccent,
+            //backgroundColor: Colors.deepPurpleAccent,
             footerHeight: 50.0,
           ),
         ),
@@ -182,12 +185,18 @@ class WalletBalanceWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       //direction: Axis.vertical,
       children: <Widget>[
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text("CURRENT BALANCE", style: TextStyle(fontSize: 12.0),),
+        ),
         Expanded(
+          //flex: 1,
           child: Container(
             alignment: Alignment.centerLeft,
-            child: Text(
-              "12,000 \u2070\u2070",
-              style: TextStyle(fontSize: 52.0),
+            child:
+            Text(
+              "\$12,000\u2070\u2070",
+              style: TextStyle(fontSize: 40.0),
             ),
           ),
         ),
@@ -198,8 +207,9 @@ class WalletBalanceWidget extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Column(
                 children: <Widget>[
-                  Text("EXPENSE", style: TextStyle(fontSize: 16.0)),
-                  Text("6,500 \u2070\u2070", style: TextStyle(fontSize: 16.0)),
+                  Text("EXPENSE", style: TextStyle(fontSize: 14.0)),
+                  Text("\$6,500 \u2070\u2070",
+                      style: TextStyle(fontSize: 14.0)),
                 ],
               ),
             ),
@@ -207,13 +217,23 @@ class WalletBalanceWidget extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: Column(
                 children: <Widget>[
-                  Text("INCOME", style: TextStyle(fontSize: 16.0)),
-                  Text("6,500 \u2070\u2070", style: TextStyle(fontSize: 16.0)),
+                  Text("INCOME", style: TextStyle(fontSize: 14.0)),
+                  Text("\u00246,500 \u2070\u2070",
+                      style: TextStyle(fontSize: 14.0)),
                 ],
               ),
             ),
           ],
         ),
+        //ClipRect(
+        //child: Padding(
+        //padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+        //child:
+        Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.0)
+            , child: Text("~Past 30 days", style: TextStyle(fontSize: 12.0))),
+        // ),
+        //)
       ],
     );
   }
@@ -223,50 +243,50 @@ class RecentContactList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-        // This next line does the trick.
-        scrollDirection: Axis.horizontal,
-        children: <Widget>[
-          Container(
-            width: 160.0,
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              color: Colors.red,
-            ),
+      // This next line does the trick.
+      scrollDirection: Axis.horizontal,
+      children: <Widget>[
+        Container(
+          width: 160.0,
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            color: Colors.red,
           ),
-          Container(
-            width: 160.0,
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              color: Colors.blue,
-            ),
+        ),
+        Container(
+          width: 160.0,
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            color: Colors.blue,
           ),
-          Container(
-            width: 160.0,
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              color: Colors.green,
-            ),
+        ),
+        Container(
+          width: 160.0,
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            color: Colors.green,
           ),
-          Container(
-            width: 160.0,
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              color: Colors.yellow,
-            ),
+        ),
+        Container(
+          width: 160.0,
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            color: Colors.yellow,
           ),
-          Container(
-            width: 160.0,
-            margin: EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(8.0)),
-              color: Colors.orange,
-            ),
+        ),
+        Container(
+          width: 160.0,
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+            color: Colors.orange,
           ),
-        ],
+        ),
+      ],
     );
   }
 }
@@ -281,5 +301,3 @@ class HistoryTile extends StatelessWidget {
     );
   }
 }
-
-
