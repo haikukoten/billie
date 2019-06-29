@@ -155,6 +155,7 @@ class ChartWrapper extends StatelessWidget {
   final fromDate = DateTime(2019, 05, 22);
   final toDate = DateTime.now();
 
+  final date0 = DateTime.now().subtract(Duration(days: 1));
   final date1 = DateTime.now().subtract(Duration(days: 2));
   final date2 = DateTime.now().subtract(Duration(days: 3));
   final date3 = DateTime.now().subtract(Duration(days: 5));
@@ -184,6 +185,7 @@ class ChartWrapper extends StatelessWidget {
                 return 5.0;
               },
               data: [
+                DataPoint<DateTime>(value: 60, xAxis: date0),
                 DataPoint<DateTime>(value: 10, xAxis: date1),
                 DataPoint<DateTime>(value: 20, xAxis: date1),
                 DataPoint<DateTime>(value: 50, xAxis: date3),

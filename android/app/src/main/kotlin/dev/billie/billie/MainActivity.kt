@@ -8,9 +8,12 @@ import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
+import android.provider.Telephony
+import android.widget.Toast
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+
 
 class MainActivity: FlutterActivity() {
   private val CHANNEL = "dev.billie.billie/sms"
@@ -21,7 +24,7 @@ class MainActivity: FlutterActivity() {
     MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
       if (call.method == "getBatteryLevel") {
         val batteryLevel = getBatteryLevel()
-
+          getAllSms(this)
         if (batteryLevel != -1) {
           result.success(batteryLevel)
         } else {
@@ -32,6 +35,54 @@ class MainActivity: FlutterActivity() {
       }
     }
   }
+
+    private fun getSmses() {
+
+    }
+
+    fun getAllSms(context: Context) {
+
+        val mProjection: Array<String> = arrayOf(
+                Telephony.Sms.BODY,
+                Telephony.Sms.SUBJECT,
+                Telephony.Sms.DATE,
+                Telephony.Sms.ADDRESS // Contract class constant for the locale column name
+        )
+
+        //val mSelectionArgs: Array<String> =
+        val mSelection: String = "${Telephony.Sms.ADDRESS} = \"MPESA\""
+
+        val cr = context.contentResolver
+        val c = cr.query(Telephony.Sms.CONTENT_URI, mProjection, mSelection, null, Telephony.Sms.DATE)
+        var totalSMS = 0
+        if (c != null) {
+            totalSMS = c.count
+            if (c.moveToFirst()) {
+                for (j in 0 until totalSMS) {
+                    //val smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
+                    //val number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                    val body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
+                    val person = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                    //val sub = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.SUBJECT))
+                    val date = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
+                    // val dateFormat = Date(Long.valueOf(smsDate))
+                    //val type: String
+                    /*when (Integer.parseInt(c.getString(c.getColumnIndexOrThrow(Telephony.Sms.TYPE)))) {
+                      //Telephony.Sms.MESSAGE_TYPE_INBOX -> type = "inbox"
+                      //Telephony.Sms.MESSAGE_TYPE_SENT -> type = "sent"
+                      //Telephony.Sms.MESSAGE_TYPE_OUTBOX -> type = "outbox"
+                      else -> {
+                      }
+                    }*/
+                    print("(Address:$person date: $date body: $body )\n")
+                    c.moveToNext()
+                }
+            }
+            c.close()
+        } else {
+            Toast.makeText(this, "No message to show!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
   private fun getBatteryLevel(): Int {
     val batteryLevel: Int
