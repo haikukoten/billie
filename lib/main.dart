@@ -1,5 +1,7 @@
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 
 void main() => runApp(MyApp());
 
@@ -26,9 +28,38 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class BillieWallet extends StatelessWidget {
+class BillieWallet extends StatefulWidget {
   //Key drawerKey = Key("drawer");
   //TODO: Convert to stateful and use scaffoldstate for programmatic drawer opening
+
+  @override
+  _BillieWalletState createState() => _BillieWalletState();
+}
+
+class _BillieWalletState extends State<BillieWallet> {
+
+  static const platform = const MethodChannel('dev.billie.billie/sms');
+
+  /*Some Boilerplate while trying to understand methodchannels
+  *
+  * You can open the android folder as its own project in android studio
+  *
+  * */
+  String _batteryLevel = 'Unknown battery level.';
+
+  Future<void> _getBatteryLevel() async {
+    String batteryLevel;
+    try {
+      final int result = await platform.invokeMethod('getBatteryLevel');
+      batteryLevel = 'Battery level at $result % .';
+    } on PlatformException catch (e) {
+      batteryLevel = "Failed to get battery level: '${e.message}'.";
+    }
+
+    setState(() {
+      _batteryLevel = batteryLevel;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,13 +86,13 @@ class BillieWallet extends StatelessWidget {
             leading: IconButton(
                 icon: Icon(Icons.menu),
                 onPressed: () {
-                  print("Stuff");
+                  print("$_batteryLevel");
                 }),
             actions: <Widget>[
               IconButton(
                   icon: Icon(Icons.account_circle),
                   onPressed: () {
-                    print("Stuff");
+                    _getBatteryLevel();
                   }),
             ],
           ),
@@ -124,6 +155,7 @@ class ChartWrapper extends StatelessWidget {
   final fromDate = DateTime(2019, 05, 22);
   final toDate = DateTime.now();
 
+  final date0 = DateTime.now().subtract(Duration(days: 1));
   final date1 = DateTime.now().subtract(Duration(days: 2));
   final date2 = DateTime.now().subtract(Duration(days: 3));
   final date3 = DateTime.now().subtract(Duration(days: 5));
@@ -153,6 +185,7 @@ class ChartWrapper extends StatelessWidget {
                 return 5.0;
               },
               data: [
+                DataPoint<DateTime>(value: 60, xAxis: date0),
                 DataPoint<DateTime>(value: 10, xAxis: date1),
                 DataPoint<DateTime>(value: 20, xAxis: date1),
                 DataPoint<DateTime>(value: 50, xAxis: date3),
