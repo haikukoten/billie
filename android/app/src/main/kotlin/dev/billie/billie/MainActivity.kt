@@ -36,10 +36,6 @@ class MainActivity: FlutterActivity() {
     }
   }
 
-    private fun getSmses() {
-
-    }
-
     fun getAllSms(context: Context) {
 
         val mProjection: Array<String> = arrayOf(
