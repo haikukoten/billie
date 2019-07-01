@@ -6,5 +6,5 @@ class SmsRetrieverBloc {
   Stream<List<MPMessage>> mpesaSmsStream = Stream.empty();
 
   SmsRetrieverBloc(this.smsServiceProxy)
-      : mpesaSmsStream = smsServiceProxy.getSmsMessages().asStream();
+      : mpesaSmsStream = smsServiceProxy.getSmsMessages().asStream().asBroadcastStream();
 }

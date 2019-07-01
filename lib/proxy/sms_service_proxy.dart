@@ -12,21 +12,39 @@ class SmsServiceProxy {
   }
 
   Future<List<MPMessage>> getSmsMessages() async {
-    List<MPMessage> mpesaMessages;
+    //Always initialize
+    List<MPMessage> mpesaMessages = [];
     SillyMPMessageParser parser = SillyMPMessageParser();
 
     try {
-      await platform.invokeMethod('getSmsMessages').then(
-            (platformMessages) => platformMessages.forEach((Map messageInfo) =>
-                mpesaMessages.add(MPMessage.fromBody(
-                    parser,
-                    messageInfo.values.toList()[1],
-                    messageInfo.values.toList()[0]))),
-          );
+      /*
+      Remember Internal values cannot inferred thus a call like:
+      final List<dynamic> strings = await platform.invokeMethod('getSmsMessages');
+      print(strings);
+
+      will pass but changing to List<Map<T,T>> will fail
+      */
+      await platform.invokeListMethod('getSmsMessages').then(
+          (platformMessages){
+            print("pl: ${platformMessages.length}");
+            platformMessages.forEach((messageBody){
+              //Casting also fails you!! So this will fail and halt execution from
+              // the other thread!!??
+              // Map messageMap = messageBody as Map<String,String>;
+               print("m: ${messageBody.values.first} \n");
+
+              MPMessage m = MPMessage.fromBody(
+                  parser,
+                  messageBody.values.first,
+                  messageBody.keys.first);
+                  mpesaMessages.add(m);
+            });
+          }
+      );
     } on PlatformException catch (e) {
       print(e.message);
     }
-
+    //print(mpesaMessages);
     return mpesaMessages;
   }
 

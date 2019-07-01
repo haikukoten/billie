@@ -1,6 +1,8 @@
 import 'package:bezier_chart/bezier_chart.dart';
+import 'package:billie/blocs/sms_retriever_bloc.dart';
+import 'package:billie/models/MPesaMessage.dart';
+import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:flutter/material.dart';
-
 
 void main() => runApp(MyApp());
 
@@ -29,14 +31,13 @@ class MyApp extends StatelessWidget {
 
 class BillieWallet extends StatefulWidget {
   //Key drawerKey = Key("drawer");
-  //TODO: Convert to stateful and use scaffoldstate for programmatic drawer opening
+  //TODO: Convert to stateful and use [ScaffoldState] for programmatic drawer opening
 
   @override
   _BillieWalletState createState() => _BillieWalletState();
 }
 
 class _BillieWalletState extends State<BillieWallet> {
-
   String _batteryLevel = "Unknown";
 
   @override
@@ -52,65 +53,101 @@ class _BillieWalletState extends State<BillieWallet> {
       ),
       //color: Colors.purpleAccent,
       body: SafeArea(
-          child: NestedScrollView(
-        headerSliverBuilder: (BuildContext c, _) => [
-          SliverAppBar(
-            pinned: false,
-            floating: true,
-            backgroundColor: Colors.purpleAccent,
-            title: Text("Billie Wallet"),
-            centerTitle: true,
-            elevation: 0.0,
-            leading: IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () {
-                  print("$_batteryLevel");
-                }),
-            actions: <Widget>[
-              IconButton(
-                  icon: Icon(Icons.account_circle),
+          child: MPMessagesProvider(
+        child: NestedScrollView(
+          headerSliverBuilder: (_, __) => [
+            SliverAppBar(
+              pinned: false,
+              floating: true,
+              backgroundColor: Colors.purpleAccent,
+              title: Text("Billie Wallet"),
+              centerTitle: true,
+              elevation: 0.0,
+              leading: IconButton(
+                  icon: Icon(Icons.menu),
                   onPressed: () {
+                    print("$_batteryLevel");
                   }),
-            ],
-          ),
-          SliverPersistentHeader(pinned: true, delegate: WalletStatHeader())
-        ],
-        body: Material(
-          color: Colors.white,
-          child: CustomScrollView(
-            slivers: <Widget>[
-              SliverToBoxAdapter(
-                child: Container(height: 200, child: ChartWrapper()),
-              ),
-              SliverToBoxAdapter(
-                child: Container(
-                    height: 150,
-                    padding: EdgeInsets.all(4.0),
-                    child: RecentContactList()),
-              ),
-              SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                          (_, index) => HistoryTile(),
-                      childCount: 70))
-            ],
+              actions: <Widget>[
+                IconButton(icon: Icon(Icons.account_circle), onPressed: () {}),
+              ],
+            ),
+            SliverPersistentHeader(pinned: true, delegate: WalletStatHeader())
+          ],
+          body: Material(
+            color: Colors.white,
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverToBoxAdapter(
+                  child: Container(height: 200, child: ChartWrapper()),
+                ),
+                SliverToBoxAdapter(
+                  child: Container(
+                      height: 150,
+                      padding: EdgeInsets.all(4.0),
+                      child: RecentContactList()),
+                ),
+                SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                        (_, index) => HistoryTile(),
+                        childCount: 70))
+              ],
+            ),
           ),
         ),
-          )),
+      )),
     );
   }
 }
 
 class WalletStatHeader extends SliverPersistentHeaderDelegate {
+  SmsRetrieverBloc smsRetrieverBloc;
+
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     // TODO: implement build
-    return Container(
-        color: Colors.purpleAccent,
-        height: 182.0,
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-        alignment: Alignment.center,
-        child: WalletBalanceWidget());
+    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
+    return StreamBuilder(
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            //print(snapshot.data);
+            return snapshot.hasData ? Container(
+                color: Colors.purpleAccent,
+                height: 182.0,
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                alignment: Alignment.center,
+                child: WalletBalanceWidget(
+                  mpmessages: snapshot.data as List<MPMessage>,
+                )) : Container(
+              height: 200,
+              alignment: Alignment.center,
+              child: CircularProgressIndicator(),
+            );
+          default:
+            return Container(
+              child: CircularProgressIndicator(),
+              height: 200,
+              alignment: Alignment.center,
+            );
+        }
+      }
+      /*snapshot.hasData
+          ? Container(
+              color: Colors.purpleAccent,
+              height: 182.0,
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              alignment: Alignment.center,
+              child: WalletBalanceWidget())
+          : Container(
+              child: CircularProgressIndicator(),
+              height: 200,
+              alignment: Alignment.center,
+            ),*/
+      ,
+      stream: smsRetrieverBloc.mpesaSmsStream,
+    );
   }
 
   @override
@@ -129,7 +166,8 @@ class WalletStatHeader extends SliverPersistentHeaderDelegate {
 }
 
 class ChartWrapper extends StatelessWidget {
-  final fromDate = DateTime(2019, 05, 22);
+  SmsRetrieverBloc smsRetrieverBloc;
+
   final toDate = DateTime.now();
 
   final date0 = DateTime.now().subtract(Duration(days: 1));
@@ -138,57 +176,84 @@ class ChartWrapper extends StatelessWidget {
   final date3 = DateTime.now().subtract(Duration(days: 5));
   final date4 = DateTime.now().subtract(Duration(days: 9));
 
-
   @override
   Widget build(BuildContext context) {
+    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
+
+    final fromDate = DateTime(2017, 05, 22);
+
     return Center(
       child: Container(
         color: Colors.white,
         height: MediaQuery.of(context).size.height / 2,
         width: MediaQuery.of(context).size.width,
-        child: BezierChart(
-          fromDate: fromDate,
-          bezierChartScale: BezierChartScale.WEEKLY,
-          toDate: toDate,
-          selectedDate: toDate,
-          series: [
-            BezierLine(
-              label: "Duty",
-              lineColor: Colors.purpleAccent,
-              onMissingValue: (dateTime) {
-                if (dateTime.day.isEven) {
-                  return 20.0;
-                }
-                return 5.0;
-              },
-              data: [
-                DataPoint<DateTime>(value: 60, xAxis: date0),
-                DataPoint<DateTime>(value: 10, xAxis: date1),
-                DataPoint<DateTime>(value: 20, xAxis: date1),
-                DataPoint<DateTime>(value: 50, xAxis: date3),
-                DataPoint<DateTime>(value: 80, xAxis: date4),
-              ],
-            ),
-          ],
-          config: BezierChartConfig(
-            verticalIndicatorStrokeWidth: 3.0,
-            verticalIndicatorColor: Colors.black26,
-            showVerticalIndicator: true,
-            //xLinesColor: Colors.black45,
-            xAxisTextStyle: TextStyle(
-                color: Colors.black45
-            ),
-            verticalIndicatorFixedPosition: false,
-            //backgroundColor: Colors.deepPurpleAccent,
-            footerHeight: 50.0,
-          ),
-        ),
+        child: StreamBuilder(
+            //padding: const EdgeInsets.all(8.0),
+          stream: smsRetrieverBloc.mpesaSmsStream,
+            builder: (_, snapshot) {
+              switch(snapshot.connectionState){
+                case ConnectionState.done:
+                   return snapshot.hasData ? BezierChart(
+                    fromDate: (snapshot.data as List<MPMessage>).last.txDate,
+                    bezierChartScale: BezierChartScale.MONTHLY,
+                    toDate: (snapshot.data as List<MPMessage>).first.txDate,
+                    selectedDate: (snapshot.data as List<MPMessage>).first.txDate,
+                    //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
+                    series: [
+                      BezierLine(
+                        label: "Duty",
+                        lineColor: Colors.purpleAccent,
+                        onMissingValue: (dateTime) {
+                          if (dateTime.day.isEven) {
+                            return 20.0;
+                          }
+                          return 5.0;
+                        },
+                        data:
+                        (snapshot.data as List<MPMessage>).map((e) =>
+                            DataPoint<DateTime>(value: e.txBal, xAxis: e.txDate)).toList()
+                        /*[
+                          DataPoint<DateTime>(value: 60, xAxis: date0),
+                          DataPoint<DateTime>(value: 10, xAxis: date1),
+                          DataPoint<DateTime>(value: 20, xAxis: date1),
+                          DataPoint<DateTime>(value: 50, xAxis: date3),
+                          DataPoint<DateTime>(value: 80, xAxis: date4),
+                        ]*/,
+                      ),
+                    ],
+                    config: BezierChartConfig(
+                      verticalIndicatorStrokeWidth: 3.0,
+                      verticalIndicatorColor: Colors.black26,
+                      showVerticalIndicator: true,
+                      //xLinesColor: Colors.black45,
+                      xAxisTextStyle: TextStyle(color: Colors.black45),
+                      displayYAxis: true,
+                      verticalIndicatorFixedPosition: false,
+                      //backgroundColor: Colors.deepPurpleAccent,
+                      footerHeight: 50.0,
+                    ),
+                  ) : Container(
+                     height: 200,
+                     alignment: Alignment.center,
+                     child: CircularProgressIndicator(),
+                   );
+                default:
+                  return Container(
+                    height: 200,
+                    alignment: Alignment.center,
+                    child: CircularProgressIndicator(),
+                  );
+              }
+        }),
       ),
     );
   }
 }
 
 class WalletBalanceWidget extends StatelessWidget {
+  final List<MPMessage> mpmessages;
+  WalletBalanceWidget({this.mpmessages});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -197,15 +262,17 @@ class WalletBalanceWidget extends StatelessWidget {
       children: <Widget>[
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text("CURRENT BALANCE", style: TextStyle(fontSize: 12.0),),
+          child: Text(
+            "CURRENT BALANCE",
+            style: TextStyle(fontSize: 12.0),
+          ),
         ),
         Expanded(
           //flex: 1,
           child: Container(
             alignment: Alignment.centerLeft,
-            child:
-            Text(
-              "\$12,000\u2070\u2070",
+            child: Text(
+              "\$${mpmessages.first.txBal.toStringAsFixed(0)}\u2070\u2070",
               style: TextStyle(fontSize: 40.0),
             ),
           ),
@@ -240,8 +307,8 @@ class WalletBalanceWidget extends StatelessWidget {
         //padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         //child:
         Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0)
-            , child: Text("~Past 30 days", style: TextStyle(fontSize: 12.0))),
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text("~Past 30 days", style: TextStyle(fontSize: 12.0))),
         // ),
         //)
       ],

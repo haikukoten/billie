@@ -13,7 +13,7 @@ class MPMessagesProvider extends InheritedWidget {
             sBloc ?? SmsRetrieverBloc(SmsServiceProxy.getInstance()),
         super(key: key, child: child);
 
-  static SmsRetrieverBloc listsBlocOf(BuildContext context) {
+  static SmsRetrieverBloc smsBlocOf(BuildContext context) {
     return (context.inheritFromWidgetOfExactType(MPMessagesProvider)
             as MPMessagesProvider)
         .smsRetrieverBloc;

@@ -26,9 +26,11 @@ class MPMessage {
   MPMessage(this.participant, this.txCode, this.mpMessageType, this.txFees,
       this.txAmount, this.txBal, this.txDate);
 
-  static MPMessage fromBody(
-      SillyMPMessageParser parser, String body, DateTime timeStamp) {
-    return parser.parseBody(body, timeStamp);
+  static MPMessage fromBody(SillyMPMessageParser parser, String body, String timeStamp) {
+    DateTime t =  DateTime.fromMillisecondsSinceEpoch(
+        int.parse(timeStamp)
+    );
+    return parser.parseBody(body, t);
   }
 }
 
@@ -42,27 +44,34 @@ class SillyMPMessageParser {
     final MPMessageType txType = getTransactionType(lowcBodyString);
     final String participant = getParticipant(txType, lowcBodyString);
 
-    String amount = "";
-    String balance = "";
-    String transactionCost = "";
+    double amount = 0;
+    double balance = 0;
+    double transactionCost = 0;
 
     int moneyCount = 0;
     for (String str in exploded) {
+      //Remember to trim newlines and commas!!
       if (str.startsWith("ksh")) {
+        print("Str: $str, rep: $moneyCount");
         String money = str.replaceAll("ksh", "");
         if (moneyCount == 0) {
-          amount = money;
+          amount = double.tryParse(money.trim().replaceAll(",", ""));
+          //print(double.parse(amount.trim().replaceAll(",", "")));
         } else if (moneyCount == 1) {
-          balance = money.substring(0, money.length - 1);
+          balance = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
+              //money.substring(0, money.length - 1);
+          //print(double.parse(balance.trim().replaceAll(",", "")));
         } else if (moneyCount == 2) {
-          transactionCost = money.substring(0, money.length - 1);
+          transactionCost =  double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
+              //money.substring(0, money.length - 1);
+          //print(double.parse(transactionCost.trim().replaceAll(",","")));
         }
         moneyCount++;
       }
     }
 
-    return MPMessage(participant, txCode, txType, double.parse(transactionCost),
-        double.parse(amount), double.parse(balance), date);
+    print("Returning $txCode, $balance, $balance, $transactionCost, $txType, $participant");
+    return MPMessage(participant, txCode, txType, transactionCost, amount, balance, date);
   }
 
   MPMessageType getTransactionType(String message) {
@@ -88,7 +97,7 @@ class SillyMPMessageParser {
       if (matcher.hasMatch(body)) {
         return matcher.firstMatch(body).group(1);
       } else {
-        return "";
+        return "EMPTY";
       }
     } else if (txType == MPMessageType.MP_TYPE_WITHDRAW) {
       RegExp matcher =
@@ -96,7 +105,7 @@ class SillyMPMessageParser {
       if (matcher.hasMatch(body)) {
         return matcher.firstMatch(body).group(1);
       } else {
-        return "";
+        return "EMPTY";
       }
     } else if (txType == MPMessageType.MP_TYPE_SENT ||
         txType == MPMessageType.MP_TYPE_PAYBILL) {
@@ -105,9 +114,9 @@ class SillyMPMessageParser {
       if (matcher.hasMatch(body)) {
         return matcher.firstMatch(body).group(1);
       } else {
-        return "";
+        return "EMPTY";
       }
     }
-    return "";
+    return "EMPTY";
   }
 }

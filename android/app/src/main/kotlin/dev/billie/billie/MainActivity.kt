@@ -34,6 +34,7 @@ class MainActivity: FlutterActivity() {
           val messages = _getAllSms(this)
           result.success(messages)
       } else {
+          print(call.method)
           result.notImplemented()
       }
     }
@@ -54,16 +55,17 @@ class MainActivity: FlutterActivity() {
         val mSelection: String = "${Telephony.Sms.ADDRESS} = \"MPESA\""
 
         val cr = context.contentResolver
-        val c = cr.query(Telephony.Sms.CONTENT_URI, mProjection, mSelection, null, Telephony.Sms.DATE)
+        val c = cr.query(Telephony.Sms.CONTENT_URI, mProjection, mSelection, null, "${Telephony.Sms.DATE} DESC")
         var totalSMS = 0
         if (c != null) {
+            //print("Count = ${c.count}")
             totalSMS = c.count
             if (c.moveToFirst()) {
                 for (j in 0 until totalSMS) {
                     //val smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
                     //val number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
                     val body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
-                    val person = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                    var person = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
                     //val sub = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.SUBJECT))
                     val date = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
                     // val dateFormat = Date(Long.valueOf(smsDate))
@@ -78,7 +80,7 @@ class MainActivity: FlutterActivity() {
                     val m = mapOf(Pair(date, body))
                     messages.add(m)
                     //print("(Address:$person date: $date body: $body )\n")
-                    //c.moveToNext()
+                    c.moveToNext()
                 }
             }
             c.close()
