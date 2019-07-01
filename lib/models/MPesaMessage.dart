@@ -37,10 +37,10 @@ class SillyMPMessageParser {
 
   MPMessage parseBody(String bodyString, DateTime date) {
     final String lowcBodyString = bodyString.toLowerCase();
-    List<String> exploded = lowcBodyString.split(" ");
-    String txCode = exploded[0];
-    MPMessageType txType = getTransactionType(lowcBodyString);
-    String participant = getParticipant(txType, lowcBodyString);
+    final List<String> exploded = lowcBodyString.split(" ");
+    final String txCode = exploded[0];
+    final MPMessageType txType = getTransactionType(lowcBodyString);
+    final String participant = getParticipant(txType, lowcBodyString);
 
     String amount = "";
     String balance = "";
