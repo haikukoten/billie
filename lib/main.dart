@@ -1,6 +1,5 @@
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 
 void main() => runApp(MyApp());
@@ -38,28 +37,7 @@ class BillieWallet extends StatefulWidget {
 
 class _BillieWalletState extends State<BillieWallet> {
 
-  static const platform = const MethodChannel('dev.billie.billie/sms');
-
-  /*Some Boilerplate while trying to understand methodchannels
-  *
-  * You can open the android folder as its own project in android studio
-  *
-  * */
-  String _batteryLevel = 'Unknown battery level.';
-
-  Future<void> _getBatteryLevel() async {
-    String batteryLevel;
-    try {
-      final int result = await platform.invokeMethod('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
-    } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
-    }
-
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
-  }
+  String _batteryLevel = "Unknown";
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +70,6 @@ class _BillieWalletState extends State<BillieWallet> {
               IconButton(
                   icon: Icon(Icons.account_circle),
                   onPressed: () {
-                    _getBatteryLevel();
                   }),
             ],
           ),

@@ -22,21 +22,26 @@ class MainActivity: FlutterActivity() {
     super.onCreate(savedInstanceState)
     GeneratedPluginRegistrant.registerWith(this)
     MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
+
       if (call.method == "getBatteryLevel") {
         val batteryLevel = getBatteryLevel()
-          getAllSms(this)
         if (batteryLevel != -1) {
           result.success(batteryLevel)
         } else {
           result.error("UNAVAILABLE", "Battery level not available.", null)
         }
+      } else if (call.method == "getSmsMessages") {
+          val messages = _getAllSms(this)
+          result.success(messages)
       } else {
-        result.notImplemented()
+          result.notImplemented()
       }
     }
   }
 
-    fun getAllSms(context: Context) {
+    private fun _getAllSms(context: Context): ArrayList<Map<String, String>> {
+
+        val messages = ArrayList<Map<String, String>>()
 
         val mProjection: Array<String> = arrayOf(
                 Telephony.Sms.BODY,
@@ -70,13 +75,17 @@ class MainActivity: FlutterActivity() {
                       else -> {
                       }
                     }*/
-                    print("(Address:$person date: $date body: $body )\n")
-                    c.moveToNext()
+                    val m = mapOf(Pair(date, body))
+                    messages.add(m)
+                    //print("(Address:$person date: $date body: $body )\n")
+                    //c.moveToNext()
                 }
             }
             c.close()
+            return messages
         } else {
             Toast.makeText(this, "No message to show!", Toast.LENGTH_SHORT).show()
+            return messages
         }
     }
 
