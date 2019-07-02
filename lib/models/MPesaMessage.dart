@@ -32,6 +32,13 @@ class MPMessage {
     );
     return parser.parseBody(body, t);
   }
+
+  @override
+  String toString() {
+    return "Transaction: { $txCode, $txAmount, $txBal, $txFees, $mpMessageType, $txDate } \n";
+  }
+
+
 }
 
 class SillyMPMessageParser {
@@ -52,25 +59,18 @@ class SillyMPMessageParser {
     for (String str in exploded) {
       //Remember to trim newlines and commas!!
       if (str.startsWith("ksh")) {
-        print("Str: $str, rep: $moneyCount");
+        //print("Str: $str, rep: $moneyCount");
         String money = str.replaceAll("ksh", "");
         if (moneyCount == 0) {
           amount = double.tryParse(money.trim().replaceAll(",", ""));
-          //print(double.parse(amount.trim().replaceAll(",", "")));
         } else if (moneyCount == 1) {
           balance = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
-              //money.substring(0, money.length - 1);
-          //print(double.parse(balance.trim().replaceAll(",", "")));
         } else if (moneyCount == 2) {
-          transactionCost =  double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
-              //money.substring(0, money.length - 1);
-          //print(double.parse(transactionCost.trim().replaceAll(",","")));
+          transactionCost = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
         }
         moneyCount++;
       }
     }
-
-    print("Returning $txCode, $balance, $balance, $transactionCost, $txType, $participant");
     return MPMessage(participant, txCode, txType, transactionCost, amount, balance, date);
   }
 
