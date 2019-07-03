@@ -44,8 +44,52 @@ class BillieWallet extends StatefulWidget {
 class _BillieWalletState extends State<BillieWallet> {
   String _batteryLevel = "Unknown";
   SmsRetrieverBloc smsRetrieverBloc;
+
+  List<Widget> slivers = new List<Widget>();
+
+
+  @override
+  void dispose() {
+    print("DISPOSE");
+    smsRetrieverBloc.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    slivers.add(SliverAppBar(
+      pinned: false,
+      //expandedHeight: 120.0,
+      backgroundColor: Colors.white,
+      title: Text(
+        "Billie Wallet",
+        style: TextStyle(color: Colors.black),
+      ),
+      centerTitle: true,
+      elevation: 0.0,
+      leading: IconButton(
+          icon: Icon(
+            Icons.menu,
+            color: Colors.black,
+          ),
+          onPressed: () {
+            print("$_batteryLevel");
+          }),
+      actions: <Widget>[
+        IconButton(
+            icon: Icon(
+              Icons.account_circle,
+              color: Colors.black,
+            ),
+            onPressed: () {}),
+      ],
+    ),);
+
+    slivers.add( SliverPersistentHeader(pinned: true, delegate: WalletStatistic()),);
+    //slivers.add(SliverPersistentHeader(pinned: true, delegate: WalletStatistic()),);
+    slivers.add(SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),);
+    //slivers.add(HistoryBox());
+
     return Scaffold(
         backgroundColor: Colors.white,
         drawer: Drawer(
@@ -59,55 +103,21 @@ class _BillieWalletState extends State<BillieWallet> {
         body: SafeArea(
           child: MPMessagesProvider(
             child: Builder(
-              builder: (innerContext) => Material(
+              builder: (innerContext){
+                smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
+                return Material(
                 color: Colors.white,
-                child: CustomScrollView(
-                  key: PageStorageKey<String>("csrv"),
-                  slivers: <Widget>[
-                    SliverAppBar(
-                      pinned: false,
-                      //expandedHeight: 120.0,
-                      backgroundColor: Colors.white,
-                      title: Text(
-                        "Billie Wallet",
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      centerTitle: true,
-                      elevation: 0.0,
-                      leading: IconButton(
-                          icon: Icon(
-                            Icons.menu,
-                            color: Colors.black,
-                          ),
-                          onPressed: () {
-                            print("$_batteryLevel");
-                          }),
-                      actions: <Widget>[
-                        IconButton(
-                            icon: Icon(
-                              Icons.account_circle,
-                              color: Colors.black,
-                            ),
-                            onPressed: () {}),
-                      ],
-                    ),
-                    SliverPersistentHeader(
-                        pinned: true, delegate: WalletStatistic()),
-                    /*SliverOverlapInjector(
-                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innerContext)),*/
-                    SliverToBoxAdapter(
-                      child: Container(height: 200, child: ChartWrapper()),
-                    ),
-                    HistoryBox(),
-                    /*SliverObstructionInjector(
-                    // This is the flip side of the SliverOverlapAbsorber above.
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innerContext),
-                    //child: Container(height: 200, child: ChartWrapper()),
-                  ),*/
-                    //SliverOverlapInjector(handle: null)
-                  ],
+                child:
+                StreamBuilder<Object>(
+                  stream: smsRetrieverBloc.historyChunks,
+                  builder: (context, snapshot) {
+                    return CustomScrollView(
+                      key: PageStorageKey<String>("csrv"),
+                      slivers: slivers..addAll(SliverSectionBuilder().create(snapshot)),
+                    );
+                  }
                 ),
-              ),
+              );},
             ),
           ),
         ));
@@ -128,6 +138,7 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
         builder: (c, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
+            case ConnectionState.active:
               return snapshot.hasData
                   ? Container(
                       color: Colors.white,
@@ -141,7 +152,8 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
                   : Container(
                       height: 200,
                       alignment: Alignment.center,
-                      child: CircularProgressIndicator());
+                      child: Text("Sanity -> No Data, Stats"));
+              break;
             default:
               return Container(
                 height: 182.0,
@@ -181,63 +193,48 @@ class WalletBalanceWidget extends StatelessWidget {
   }
 }
 
-class HistoryBox extends StatelessWidget {
-  SmsRetrieverBloc smsRetrieverBloc;
+class SliverSectionBuilder {
 
-  @override
-  Widget build(BuildContext context) {
-    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
-    return StreamBuilder(
-        stream: smsRetrieverBloc.historyChunks,
-        builder: (context, snapshot) {
-          //print("Data: ${snapshot.data}");
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              print("A: ${snapshot.data}");
-              if (snapshot.hasData) {
-                var keys = (snapshot.data as Map).keys.toList();
-                var values = (snapshot.data as Map).values.toList();
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    return SliverStickyHeaderBuilder(
-                        builder: (context, state) =>
-                        new Container(
-                          height: 60.0,
-                          color: (state.isPinned
-                              ? Colors.pink
-                              : Colors.lightBlue)
-                              .withOpacity(
-                              1.0 - state.scrollPercentage),
-                          padding:
-                          EdgeInsets.symmetric(horizontal: 16.0),
-                          alignment: Alignment.centerLeft,
-                          child: new Text(
-                            '${keys[index]}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        sliver: new SliverList(
-                          delegate: new SliverChildBuilderDelegate(
-                                (context, i) => HistoryTile(),
-                            childCount: 14,
-                          ),
-                        ));
-                  }, childCount: (snapshot.data as Map).length),
-                );
-              } else {
-                return SliverToBoxAdapter(
-                  child: Text("No entries!"),
-                );
-              }
-              break;
-            default:
-              return SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-          }
-        });
+  List<Widget> create(AsyncSnapshot  items){
+    //var keys = items.keys.toList();
+    //var values = items.values.toList();
+    switch(items.connectionState){
+      case ConnectionState.done:
+      case ConnectionState.waiting:
+      case ConnectionState.active:
+        if (items.hasData) {
+          print("SectionBuilder -> ${items.data.keys.length}");
+          return  (items.data as Map).keys.map((e) =>
+              SliverStickyHeaderBuilder(
+                  builder: (context, state) => new Container(
+                    height: 60.0,
+                    color: (state.isPinned
+                        ? Colors.pink
+                        : Colors.lightBlue)
+                        .withOpacity(1.0 - state.scrollPercentage),
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    alignment: Alignment.centerLeft,
+                    child: new Text(
+                      '$e',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  sliver: new SliverList(
+                    delegate: new SliverChildBuilderDelegate(
+                          (context, i) => HistoryTile(),
+                      childCount: 4,
+                    ),
+                  ))
+          ).toList();
+        } else {
+          return [SliverToBoxAdapter(
+            child: Text("No entries!"),
+          )];
+        }
+        break;
+      default:
+        return [];
+    }
   }
 }
 
@@ -248,87 +245,59 @@ class ChartWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return Center(
-      child: Container(
-        color: Colors.white,
-        height: MediaQuery.of(context).size.height / 2,
-        width: MediaQuery.of(context).size.width,
-        child: StreamBuilder(
-            //padding: const EdgeInsets.all(8.0),
-            stream: smsRetrieverBloc.mpesaSmsStream,
-            builder: (_, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.done:
-                  return snapshot.hasData
-                      ? StreamBuilder(
-                          stream: smsRetrieverBloc.datapointsStream,
-                          builder: (_, snapshotInner) {
-                            switch (snapshotInner.connectionState) {
-                              case ConnectionState.done:
-                                return BezierChart(
-                                  fromDate: (snapshot.data as List<MPMessage>)
-                                      .last
-                                      .txDate,
-                                  bezierChartScale: BezierChartScale.MONTHLY,
-                                  toDate: (snapshot.data as List<MPMessage>)
-                                      .first
-                                      .txDate,
-                                  selectedDate:
-                                      (snapshot.data as List<MPMessage>)
-                                          .first
-                                          .txDate,
-                                  //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
-                                  series: [
-                                    BezierLine(
-                                      label: "Duty",
-                                      lineColor: Colors.purpleAccent,
-                                      onMissingValue: (dateTime) {
-                                        if (dateTime.day.isEven) {
-                                          return 20.0;
-                                        }
-                                        return 5.0;
-                                      },
-                                      data: snapshotInner.data,
-                                    )
-                                  ],
-                                  config: BezierChartConfig(
-                                    verticalIndicatorStrokeWidth: 3.0,
-                                    verticalIndicatorColor: Colors.black26,
-                                    pinchZoom: true,
-                                    //showVerticalIndicator: true,
-                                    //xLinesColor: Colors.black45,
-                                    xAxisTextStyle:
-                                        TextStyle(color: Colors.black45),
-                                    //displayYAxis: true,
-                                    startYAxisFromNonZeroValue: false,
-                                    yAxisTextStyle:
-                                        TextStyle(color: Colors.black54),
-                                    verticalIndicatorFixedPosition: false,
-                                    //backgroundColor: Colors.deepPurpleAccent,
-                                    footerHeight: 50.0,
-                                  ),
-                                );
-                              default:
-                                return Container(
-                                  alignment: Alignment.center,
-                                  child: CircularProgressIndicator(),
-                                );
-                            }
-                          })
-                      : Container(
-                          height: 200,
-                          alignment: Alignment.center,
-                          child: CircularProgressIndicator(),
-                        );
-                default:
-                  return Container(
-                    height: 200,
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator(),
-                  );
-              }
-            }),
-      ),
-    );
+        child: Container(
+            color: Colors.white,
+            height: MediaQuery.of(context).size.height / 2,
+            width: MediaQuery.of(context).size.width,
+            child: StreamBuilder(
+                stream: smsRetrieverBloc.datapointsStream,
+                builder: (_, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.done:
+                    case ConnectionState.active:
+                      return BezierChart(
+                        fromDate: (snapshot.data as List<DataPoint>).last.xAxis,
+                        bezierChartScale: BezierChartScale.MONTHLY,
+                        toDate: (snapshot.data as List<DataPoint>).first.xAxis,
+                        selectedDate:
+                            (snapshot.data as List<DataPoint>).first.xAxis,
+                        //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
+                        series: [
+                          BezierLine(
+                            label: "Duty",
+                            lineColor: Colors.purpleAccent,
+                            onMissingValue: (dateTime) {
+                              if (dateTime.day.isEven) {
+                                return 20.0;
+                              }
+                              return 5.0;
+                            },
+                            data: snapshot.data,
+                          )
+                        ],
+                        config: BezierChartConfig(
+                          verticalIndicatorStrokeWidth: 3.0,
+                          verticalIndicatorColor: Colors.black26,
+                          pinchZoom: true,
+                          //showVerticalIndicator: true,
+                          //xLinesColor: Colors.black45,
+                          xAxisTextStyle: TextStyle(color: Colors.black45),
+                          //displayYAxis: true,
+                          startYAxisFromNonZeroValue: false,
+                          yAxisTextStyle: TextStyle(color: Colors.black54),
+                          verticalIndicatorFixedPosition: false,
+                          //backgroundColor: Colors.deepPurpleAccent,
+                          footerHeight: 50.0,
+                        ),
+                      );
+                      break;
+                    default:
+                      return Container(
+                        alignment: Alignment.center,
+                        child: Text("Sanity -> Default, Stats"),
+                      );
+                  }
+                })));
   }
 }
 

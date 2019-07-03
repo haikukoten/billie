@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart' as Collections;
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:billie/models/MPesaMessage.dart';
@@ -39,12 +41,12 @@ class SmsServiceProxy {
               ///the other thread!!??
               /// Map messageMap = messageBody as Map<String,String>;
               ///print("m: ${messageBody.values.first} \n");
-
               MPMessage m = MPMessage.fromBody(
                   parser,
                   messageBody.values.first,
                   messageBody.keys.first);
                   if(m.mpMessageType != MPMessageType.MP_TYPE_UNKNOWN){
+                    //myController.sink.add(m);
                     mpesaMessages.add(m);
                   }
             });
