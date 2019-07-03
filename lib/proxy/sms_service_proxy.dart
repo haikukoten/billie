@@ -10,7 +10,7 @@ class SmsServiceProxy {
   static const INCOME = "incomeSum";
   static const EXPENSE = "expenseSum";
   static const FEES = "fees";
-  static const MAX = "max";
+  static const BALANCE = "max";
 
   static SmsServiceProxy getInstance() {
     return sSmsServiceProxyInstance == null
@@ -65,7 +65,7 @@ class SmsServiceProxy {
     double expenseSum = 0;
     double incomeSum = 0;
     double txFees = 0;
-    double max = messages.first.txBal;
+    double balance = messages.first.txBal;
     messages.forEach((MPMessage m){
       switch(m.mpMessageType){
         case MPMessageType.MP_TYPE_PAYBILL:
@@ -83,10 +83,11 @@ class SmsServiceProxy {
           break;
       }
     });
-    return {INCOME: incomeSum, EXPENSE: expenseSum, FEES: txFees, MAX: max};
+    return {INCOME: incomeSum, EXPENSE: expenseSum, FEES: txFees, BALANCE: balance};
   }
 
-  Future<Map<DateTime,List<MPMessage>>> chunkByDate(List<MPMessage> flatMessages) async{
+  Future<Map<DateTime,List<MPMessage>>> chunkByDate(List<MPMessage> flatMessages) async {
+    print(flatMessages);
     return Collections.groupBy(flatMessages, (MPMessage el) {
       return DateTime(el.txDate.year,el.txDate.month, el.txDate.day);
     });

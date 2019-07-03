@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:billie/models/MPesaMessage.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
@@ -12,6 +14,7 @@ class SmsRetrieverBloc {
   Stream<List<MPMessage>> mpesaSmsStream = Stream.empty();
   Stream<List<DataPoint<DateTime>>> datapointsStream = Stream.empty();
   Stream<Map<String,double>> statsStream = Stream.empty();
+  //StreamController<dynamic> hChunk = StreamController();
   Stream<Map<DateTime,List<MPMessage>>> historyChunks = Stream.empty();
 
   //TODO: Switch to StreamController based

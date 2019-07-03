@@ -1,12 +1,12 @@
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:flutter/rendering.dart';
-import 'dart:math' as math;
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:billie/blocs/sms_retriever_bloc.dart';
 import 'package:billie/models/MPesaMessage.dart';
 import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
+import 'package:billie/widgets/quick_stats.dart';
 
 void main() => runApp(MyApp());
 
@@ -47,144 +47,108 @@ class _BillieWalletState extends State<BillieWallet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purpleAccent,
-      drawer: Drawer(
-        //key: drawerKey,
-        child: Container(
-          color: Colors.white,
-          height: 500,
+        backgroundColor: Colors.white,
+        drawer: Drawer(
+          //key: drawerKey,
+          child: Container(
+            color: Colors.white,
+            height: 500,
+          ),
         ),
-      ),
-      //color: Colors.purpleAccent,
-      body: SafeArea(
+        //color: Colors.purpleAccent,
+        body: SafeArea(
           child: MPMessagesProvider(
-        child: /*NestedScrollView(
-          headerSliverBuilder: (innercontext, __) {
-            return [
-            SliverOverlapAbsorber(
-                // This widget takes the overlapping behavior of the SliverAppBar,
-                // and redirects it to the SliverOverlapInjector below. If it is
-                // missing, then it is possible for the nested "inner" scroll view
-                // below to end up under the SliverAppBar even when the inner
-                // scroll view thinks it has not been scrolled.
-                // This is not necessary if the "headerSliverBuilder" only builds
-                // widgets that do not overlap the next sliver.
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innercontext),
-              child: SliverAppBar(
-                pinned: true,
-                backgroundColor: Colors.purpleAccent,
-                title: Text("Billie Wallet"),
-                centerTitle: true,
-                elevation: 0.0,
-                leading: IconButton(
-                    icon: Icon(Icons.menu),
-                    onPressed: () {
-                      print("$_batteryLevel");
-                    }),
-                actions: <Widget>[
-                  IconButton(
-                      icon: Icon(Icons.account_circle), onPressed: () {}),
-                ],
-              ),),
-              /*SliverOverlapAbsorber(
-                  // This widget takes the overlapping behavior of the SliverAppBar,
-                  // and redirects it to the SliverOverlapInjector below. If it is
-                  // missing, then it is possible for the nested "inner" scroll view
-                  // below to end up under the SliverAppBar even when the inner
-                  // scroll view thinks it has not been scrolled.
-                  // This is not necessary if the "headerSliverBuilder" only builds
-                  // widgets that do not overlap the next sliver.
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innercontext),
-                  child: */
-              Builder(builder: (c) {
-                    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(c);
-                    return SliverPersistentHeader(
-                              //pinned: true,
-                                delegate: WalletStatistic());
-                  })//)
-            ];
-          },
-          body: */
-        Builder(
-            builder: (innerContext) => Material(
-              color: Colors.white,
-              child: CustomScrollView(
-                key: PageStorageKey<String>("csrv"),
-                slivers: <Widget>[
-                 SliverAppBar(
+            child: Builder(
+              builder: (innerContext) => Material(
+                color: Colors.white,
+                child: CustomScrollView(
+                  key: PageStorageKey<String>("csrv"),
+                  slivers: <Widget>[
+                    SliverAppBar(
                       pinned: false,
-                      backgroundColor: Colors.purpleAccent,
-                      title: Text("Billie Wallet"),
+                      //expandedHeight: 120.0,
+                      backgroundColor: Colors.white,
+                      title: Text(
+                        "Billie Wallet",
+                        style: TextStyle(color: Colors.black),
+                      ),
                       centerTitle: true,
                       elevation: 0.0,
                       leading: IconButton(
-                          icon: Icon(Icons.menu),
+                          icon: Icon(
+                            Icons.menu,
+                            color: Colors.black,
+                          ),
                           onPressed: () {
                             print("$_batteryLevel");
                           }),
                       actions: <Widget>[
                         IconButton(
-                            icon: Icon(Icons.account_circle), onPressed: () {}),
+                            icon: Icon(
+                              Icons.account_circle,
+                              color: Colors.black,
+                            ),
+                            onPressed: () {}),
                       ],
                     ),
-                SliverPersistentHeader(
-                  pinned: true,
-                    delegate: WalletStatistic()),
-                  /*SliverOverlapInjector(
+                    SliverPersistentHeader(
+                        pinned: true, delegate: WalletStatistic()),
+                    /*SliverOverlapInjector(
                       handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innerContext)),*/
-                  SliverToBoxAdapter(
-                    child: Container(height: 200, child: ChartWrapper()),
-                  ),
-                  HistoryBox(),
-                  /*SliverObstructionInjector(
+                    SliverToBoxAdapter(
+                      child: Container(height: 200, child: ChartWrapper()),
+                    ),
+                    HistoryBox(),
+                    /*SliverObstructionInjector(
                     // This is the flip side of the SliverOverlapAbsorber above.
                     handle: NestedScrollView.sliverOverlapAbsorberHandleFor(innerContext),
                     //child: Container(height: 200, child: ChartWrapper()),
                   ),*/
-                  //SliverOverlapInjector(handle: null)
-                ],
+                    //SliverOverlapInjector(handle: null)
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ));
+        ));
     //);
   }
 }
 
-class WalletStatistic extends SliverPersistentHeaderDelegate{
-
+class WalletStatistic extends SliverPersistentHeaderDelegate {
   SmsRetrieverBloc smsRetrieverBloc;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     // TODO: implement build
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
-    return
-      StreamBuilder(
-          stream: smsRetrieverBloc.statsStream,
-          builder: (c,snapshot){
-            switch(snapshot.connectionState){
-              case ConnectionState.done:
-                return snapshot.hasData ? Container(
-                    color: Colors.purpleAccent,
-                    height: 182.0,
-                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                    alignment: Alignment.center,
-                    child:
-                    WalletBalanceWidget(
-                      snapshot.data,
-                    )) : Container(
-                    height: 200,
-                    alignment: Alignment.center,
-                    child: CircularProgressIndicator());
-              default:
-                return Container(
-                  height: 182.0,
-                  child: Text("YIII"),
-                );
-            }
-      });
+    return StreamBuilder(
+        stream: smsRetrieverBloc.statsStream,
+        builder: (c, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              return snapshot.hasData
+                  ? Container(
+                      color: Colors.white,
+                      height: 182.0,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                      //alignment: Alignment.center,
+                      child: WalletBalanceWidget(
+                        snapshot.data,
+                      ))
+                  : Container(
+                      height: 200,
+                      alignment: Alignment.center,
+                      child: CircularProgressIndicator());
+            default:
+              return Container(
+                height: 182.0,
+                child: Text("YIII"),
+              );
+          }
+        });
   }
 
   @override
@@ -199,20 +163,21 @@ class WalletStatistic extends SliverPersistentHeaderDelegate{
 
   @override
   // TODO: implement minExtent
-  double get minExtent => 80.0;
-
+  double get minExtent => 92.0;
 }
 
 class WalletBalanceWidget extends StatelessWidget {
-
-  Map<String, double> stats;
+  final Map<String, double> stats;
 
   WalletBalanceWidget(this.stats);
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return Text("${stats[SmsServiceProxy.MAX]}");
+    return QuickStats(
+        balance: stats[SmsServiceProxy.BALANCE],
+        expense: stats[SmsServiceProxy.EXPENSE],
+        income: stats[SmsServiceProxy.INCOME]);
   }
 }
 
@@ -228,25 +193,43 @@ class HistoryBox extends StatelessWidget {
           //print("Data: ${snapshot.data}");
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              return new SliverStickyHeaderBuilder(
-                builder: (context, state) => new Container(
-                  height: 60.0,
-                  color: (state.isPinned ? Colors.pink : Colors.lightBlue)
-                      .withOpacity(1.0 - state.scrollPercentage),
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  alignment: Alignment.centerLeft,
-                  child: new Text(
-                    'Header #1',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                sliver: new SliverList(
-                  delegate: new SliverChildBuilderDelegate(
-                    (context, i) => HistoryTile(),
-                    childCount: 14,
-                  ),
-                ),
-              );
+              print("A: ${snapshot.data}");
+              if (snapshot.hasData) {
+                var keys = (snapshot.data as Map).keys.toList();
+                var values = (snapshot.data as Map).values.toList();
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    return SliverStickyHeaderBuilder(
+                        builder: (context, state) =>
+                        new Container(
+                          height: 60.0,
+                          color: (state.isPinned
+                              ? Colors.pink
+                              : Colors.lightBlue)
+                              .withOpacity(
+                              1.0 - state.scrollPercentage),
+                          padding:
+                          EdgeInsets.symmetric(horizontal: 16.0),
+                          alignment: Alignment.centerLeft,
+                          child: new Text(
+                            '${keys[index]}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        sliver: new SliverList(
+                          delegate: new SliverChildBuilderDelegate(
+                                (context, i) => HistoryTile(),
+                            childCount: 14,
+                          ),
+                        ));
+                  }, childCount: (snapshot.data as Map).length),
+                );
+              } else {
+                return SliverToBoxAdapter(
+                  child: Text("No entries!"),
+                );
+              }
+              break;
             default:
               return SliverFillRemaining(
                 child: Center(
