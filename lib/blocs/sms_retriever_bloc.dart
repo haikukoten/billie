@@ -55,7 +55,7 @@ class SmsRetrieverBloc {
       _datapointController.addStream(smsServiceProxy.getDataPoints(e).asStream());
       _statsController.addStream(smsServiceProxy.getReducedSums(e).asStream());
       _historyChunkController.addStream(smsServiceProxy.chunkByDate(e).asStream());
-      _mpesaSmsController.close();
+      //_mpesaSmsController.close();
     });
   }
 

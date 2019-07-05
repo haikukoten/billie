@@ -72,7 +72,7 @@ class QuickStats extends StatelessWidget {
                 Text(
                   "${formatAsCurrency(this.income)}",
                   style: TextStyle(
-                    fontSize: 24.0,
+                    fontSize: 20.0,
                   ),
                 ),
               ],
@@ -94,7 +94,7 @@ class QuickStats extends StatelessWidget {
                 Text(
                   "${formatAsCurrency(this.expense)}",
                   style: TextStyle(
-                    fontSize: 24.0,
+                    fontSize: 20.0,
                   ),
                 )
               ],

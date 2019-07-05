@@ -89,7 +89,6 @@ class SmsServiceProxy {
   }
 
   Future<Map<DateTime,List<MPMessage>>> chunkByDate(List<MPMessage> flatMessages) async {
-    print(flatMessages);
     return Collections.groupBy(flatMessages, (MPMessage el) {
       return DateTime(el.txDate.year,el.txDate.month, el.txDate.day);
     });
