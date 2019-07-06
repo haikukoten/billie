@@ -7,6 +7,9 @@ import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
 import 'package:billie/widgets/quick_stats.dart';
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'models/MPesaMessage.dart';
 
@@ -29,6 +32,7 @@ class MyApp extends StatelessWidget {
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
+        fontFamily: "Raleway"
       ),
       home: BillieWallet(),
     );
@@ -44,15 +48,17 @@ class BillieWallet extends StatefulWidget {
 }
 
 class _BillieWalletState extends State<BillieWallet> {
+
   String _batteryLevel = "Unknown";
   SmsRetrieverBloc smsRetrieverBloc;
+  ScrollController _scrollController = ScrollController();
 
   List<Widget> slivers = new List<Widget>();
-
 
   @override
   void dispose() {
     smsRetrieverBloc.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -63,14 +69,19 @@ class _BillieWalletState extends State<BillieWallet> {
       //expandedHeight: 120.0,
       backgroundColor: Colors.white,
       title: Text(
-        "Billie Wallet",
-        style: TextStyle(color: Colors.black),
+        "Billie",
+        style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            //letterSpacing: 1.0,
+            fontFamily: "DMSerifDisplay"),
       ),
       centerTitle: true,
       elevation: 0.0,
       leading: IconButton(
+        iconSize: 16.0,
           icon: Icon(
-            Icons.menu,
+            FontAwesomeIcons.bars,
             color: Colors.black,
           ),
           onPressed: () {
@@ -78,17 +89,29 @@ class _BillieWalletState extends State<BillieWallet> {
           }),
       actions: <Widget>[
         IconButton(
+            iconSize: 16.0,
             icon: Icon(
-              Icons.account_circle,
+              FontAwesomeIcons.wallet,
               color: Colors.black,
             ),
             onPressed: () {}),
       ],
     ),);
 
-    slivers.add( SliverPersistentHeader(pinned: true, delegate: WalletStatistic()),);
-    //slivers.add(SliverPersistentHeader(pinned: true, delegate: WalletStatistic()),);
-    slivers.add(SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),);
+    slivers.add( SliverPersistentHeader(pinned: true, floating: false,delegate : WalletStatistic()),);
+    slivers.add( SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),);
+    slivers.add( SliverToBoxAdapter(child: Divider(),));
+    slivers.add( SliverToBoxAdapter(child: ListTile(
+      dense: true,
+      //trailing: Icon(FontAwesomeIcons.history,size: 10.0,),
+      title: const Text("TRANSACTION HISTORY",
+        style: const TextStyle(
+        color: Colors.blueGrey,
+        letterSpacing: 1.0,
+        fontWeight: FontWeight.bold,
+        fontSize: 10.0
+      ),),
+    ),));
     //slivers.add(HistoryBox());
 
     return Scaffold(
@@ -113,6 +136,7 @@ class _BillieWalletState extends State<BillieWallet> {
                   stream: smsRetrieverBloc.historyChunks,
                   builder: (context, AsyncSnapshot<Object> snapshot) {
                     return CustomScrollView(
+                      controller: _scrollController,
                       physics: BouncingScrollPhysics(),
                       key: PageStorageKey<String>("csrv"),
                       slivers: slivers..addAll(SliverSectionBuilder().create(snapshot)),
@@ -128,11 +152,14 @@ class _BillieWalletState extends State<BillieWallet> {
 }
 
 class WalletStatistic extends SliverPersistentHeaderDelegate {
+
+
   SmsRetrieverBloc smsRetrieverBloc;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    //print("shOff: $shrinkOffset, overlap: $overlapsContent");
     // TODO: implement build
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return StreamBuilder(
@@ -142,14 +169,22 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
             case ConnectionState.done:
             case ConnectionState.active:
               return snapshot.hasData
-                  ? Container(
+                  ? Card(
                       color: Colors.white,
-                      height: 182.0,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      margin: EdgeInsets.all(0.0),
+                      elevation: shrinkOffset == 0 ? 0.0 : 2.0,
+                  //elevation: 2.0,
+                  shape:  RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0.0),
+                      ),
+                      //height: 182.0,
+                      //padding:EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       //alignment: Alignment.center,
-                      child: WalletBalanceWidget(
-                        snapshot.data,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: WalletBalanceWidget(
+                          snapshot.data
+                        ),
                       ))
                   : Container(
                       height: 200,
@@ -173,11 +208,11 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
 
   @override
   // TODO: implement maxExtent
-  double get maxExtent => 132.0;
+  double get maxExtent => 136.0;
 
   @override
   // TODO: implement minExtent
-  double get minExtent => 106.0;
+  double get minExtent => 109.0;
 }
 
 class WalletBalanceWidget extends StatelessWidget {
@@ -197,8 +232,8 @@ class WalletBalanceWidget extends StatelessWidget {
 
 class SliverSectionBuilder {
 
-  static const months = ["January", "February", "March", "April", "May", "June", "July",
-    "August", "September", "October", "November", "December"];
+  static const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   String capitalize(String f){
     return "${f[0].toUpperCase()}${f.substring(1)}";
@@ -214,21 +249,38 @@ class SliverSectionBuilder {
         if (items.hasData) {
           return  (items.data as Map<DateTime,List>).keys.map((DateTime e) =>
               SliverStickyHeaderBuilder(
-                  builder: (context, state) => new Container(
-                    height: 60.0,
-                    color: (state.isPinned
-                        ? Colors.pink
-                        : Colors.lightBlue)
-                        .withOpacity(1.0 - state.scrollPercentage),
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    alignment: Alignment.centerLeft,
-                    child: new Text(
-                      DateTime.now().difference(e) < Duration(days: 30)
-                          ? '${timeago.format(e)}'
-                          : '${capitalize(timeago.format(e))} on ${ months[e.month]} ${e.day}',
-                      style: const TextStyle(color: Colors.white),
+                  builder: (context, state) {
+                     return Card(
+                       margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    elevation: state.isPinned ? (2.0) : 1.0 - (state.scrollPercentage),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0)
                     ),
-                  ),
+                    //padding: const EdgeInsets.all(8.0),
+                    child: new Container(
+                      height: 30.0,
+                      color:Colors.white.withOpacity(math.min(0.5, 1.0 - state.scrollPercentage)),
+                      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: new Text(
+                              DateTime.now().difference(e) < Duration(days: 30)
+                                  ? '${timeago.format(e).toUpperCase()}'
+                                  : '${timeago.format(e).toUpperCase()} on ${ months[e.month]} ${e.day}',
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                //fontWeight: FontWeight.bold,
+                                //color: state.isPinned ? Colors.white : Colors.black87
+                              ),
+                            ),
+                          ),
+                          Icon(FontAwesomeIcons.history, size: 14.0,)
+                        ],
+                      ),
+                    ),
+                  );},
                   sliver: new SliverList(
                     delegate: new SliverChildBuilderDelegate(
                           (context, i) => HistoryTile(items.data[e][i]),
@@ -263,24 +315,23 @@ class ChartWrapper extends StatelessWidget {
                   switch (snapshot.connectionState) {
                     case ConnectionState.done:
                     case ConnectionState.active:
+                      var data = snapshot.data as List<DataPoint>;
                       return Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: BezierChart(
-                          fromDate: (snapshot.data as List<DataPoint>).last.xAxis,
-                          bezierChartScale: BezierChartScale.MONTHLY,
-                          toDate: (snapshot.data as List<DataPoint>).first.xAxis,
+                          fromDate: data.last.xAxis,
+                          //TODO: Use a custom scale to better handle missing values
+                          bezierChartScale: BezierChartScale.WEEKLY,
+                          toDate: data.first.xAxis,
                           selectedDate:
-                              (snapshot.data as List<DataPoint>).first.xAxis,
+                              data.first.xAxis,
                           //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
                           series: [
                             BezierLine(
                               label: "Duty",
                               lineColor: Colors.purpleAccent,
                               onMissingValue: (dateTime) {
-                                if (dateTime.day.isEven) {
-                                  return 20.0;
-                                }
-                                return 5.0;
+                                return math.Random().nextDouble() * 5000;
                               },
                               data: snapshot.data,
                             )
@@ -335,9 +386,9 @@ class HistoryTile extends StatelessWidget {
   //Creates a string with the decimal points as superscripts
   String formatAsCurrency(double value) {
     String num = value.toStringAsFixed(2);
-    var s =
-        "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
-    return "\$${value.toStringAsFixed(0)}.$s";
+    //var s =
+     //   "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
+    return NumberFormat.compactCurrency(symbol: "\$").format(value);
   }
 
 
@@ -348,36 +399,42 @@ class HistoryTile extends StatelessWidget {
         return ListTile(
           leading: IconButton(
             color: Colors.green,
+              iconSize: 20.0,
               icon: Icon(Icons.monetization_on),
               onPressed: (){}),
           title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
           dense: true,
-          subtitle: Text(formatAsCurrency(message.txAmount)),
+          subtitle: Text(formatAsCurrency(message.txAmount),
+          ),
         );
       case MPMessageType.MP_TYPE_UNKNOWN:
         return ListTile(
           dense: true,
           leading: IconButton(
+              iconSize: 20.0,
               icon: Icon(Icons.room_service), onPressed: (){}),
           title: Text("Service Message!"),
         );
       case MPMessageType.MP_TYPE_AIRTIME:
         return ListTile(
           leading: IconButton(
+              iconSize: 20.0,
               color: Colors.blue,
               icon: Icon(Icons.perm_data_setting), onPressed: (){}),
           title: Text("Airtime purchase"),
           dense: true,
-          subtitle: Text(formatAsCurrency(message.txAmount)),
+          subtitle: Text(formatAsCurrency(message.txAmount),),
         );
       default:
         return ListTile(
           leading: IconButton(
               color: Colors.redAccent,
+              iconSize: 20.0,
               icon: Icon(Icons.payment), onPressed: (){}),
           dense: true,
           title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
-          subtitle: Text(formatAsCurrency(message.txAmount)),
+          subtitle: Text("${formatAsCurrency(message.txAmount)} | Fees: ${formatAsCurrency(message.txFees)}",
+          ),
         );
     }
   }
