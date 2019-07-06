@@ -385,7 +385,7 @@ class HistoryTile extends StatelessWidget {
 
   //Creates a string with the decimal points as superscripts
   String formatAsCurrency(double value) {
-    String num = value.toStringAsFixed(2);
+    //String num = value.toStringAsFixed(2);
     //var s =
      //   "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
     return NumberFormat.compactCurrency(symbol: "\$").format(value);
@@ -400,7 +400,7 @@ class HistoryTile extends StatelessWidget {
           leading: IconButton(
             color: Colors.green,
               iconSize: 20.0,
-              icon: Icon(Icons.monetization_on),
+              icon: Icon(FontAwesomeIcons.moneyCheckAlt),
               onPressed: (){}),
           title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
           dense: true,
@@ -412,7 +412,7 @@ class HistoryTile extends StatelessWidget {
           dense: true,
           leading: IconButton(
               iconSize: 20.0,
-              icon: Icon(Icons.room_service), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.tools), onPressed: (){}),
           title: Text("Service Message!"),
         );
       case MPMessageType.MP_TYPE_AIRTIME:
@@ -420,7 +420,7 @@ class HistoryTile extends StatelessWidget {
           leading: IconButton(
               iconSize: 20.0,
               color: Colors.blue,
-              icon: Icon(Icons.perm_data_setting), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.mobile), onPressed: (){}),
           title: Text("Airtime purchase"),
           dense: true,
           subtitle: Text(formatAsCurrency(message.txAmount),),
@@ -430,7 +430,7 @@ class HistoryTile extends StatelessWidget {
           leading: IconButton(
               color: Colors.redAccent,
               iconSize: 20.0,
-              icon: Icon(Icons.payment), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.creditCard), onPressed: (){}),
           dense: true,
           title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
           subtitle: Text("${formatAsCurrency(message.txAmount)} | Fees: ${formatAsCurrency(message.txFees)}",
