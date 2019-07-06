@@ -43,6 +43,7 @@ class SmsRetrieverBloc {
   Stream<List<DataPoint<DateTime>>> get datapointsStream => _datapointController.stream;
   Stream<Map<String,double>> get statsStream => _statsController.stream;
   Stream<Map<DateTime,List<MPMessage>>> get historyChunks => _historyChunkController.stream;
+  StreamSubscription mpesaStreamSub;
 
 
 
@@ -51,15 +52,17 @@ class SmsRetrieverBloc {
       _mpesaSmsController.sink.add(data);
     });
 
-    mpesaSmsStream.listen((e){
+    mpesaStreamSub = mpesaSmsStream.listen((e){
       _datapointController.addStream(smsServiceProxy.getDataPoints(e).asStream());
       _statsController.addStream(smsServiceProxy.getReducedSums(e).asStream());
       _historyChunkController.addStream(smsServiceProxy.chunkByDate(e).asStream());
       //_mpesaSmsController.close();
     });
+
   }
 
   void dispose(){
+    mpesaStreamSub.cancel();
     _mpesaSmsController.close();
     _datapointController.close();
     _statsController.close();

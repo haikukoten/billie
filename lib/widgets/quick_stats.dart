@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class QuickStats extends StatelessWidget {
   final double balance;
@@ -27,7 +28,7 @@ class QuickStats extends StatelessWidget {
     String num = value.toStringAsFixed(2);
     var s =
         "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
-    return "\$${value.toStringAsFixed(0)}.$s";
+    return "${NumberFormat.compactCurrency(symbol: "").format(value)}.$s";
   }
 
   @override
@@ -38,19 +39,32 @@ class QuickStats extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: <Widget>[
         Text(
-          "CURRENT BALANCE",
+          "BALANCE",
           style: TextStyle(
-              color: Colors.grey,
+              color: Colors.blueGrey,
               //wordSpacing: 4.0,
-              //letterSpacing: 4.0,
-              fontSize: 12.0,
+              letterSpacing: 1.0,
+              fontSize: 10.0,
               fontWeight: FontWeight.bold),
         ),
-        Text(
-          "${formatAsCurrency(this.balance)}",
-          style: TextStyle(
-            fontSize: 32.0,
-          ),
+        Row(
+          children: <Widget>[
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text("\$", style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12.0),),
+              ],
+            ),
+            Text(
+              "${formatAsCurrency(this.balance)}",
+              style: TextStyle(
+                fontSize: 28.0,
+              ),
+            ),
+          ],
         ),
         Row(
           //crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -63,17 +77,30 @@ class QuickStats extends StatelessWidget {
                 Text(
                   "INCOME",
                   style: TextStyle(
-                      color: Colors.grey,
+                      color: Colors.green,
                       //wordSpacing: 4.0,
-                      //letterSpacing: 4.0,
-                      fontSize: 12.0,
+                      letterSpacing: 1.0,
+                      fontSize: 10.0,
                       fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  "${formatAsCurrency(this.income)}",
-                  style: TextStyle(
-                    fontSize: 20.0,
-                  ),
+                Row(
+                  children: <Widget>[
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text("\$", style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12.0),),
+                      ],
+                    ),
+                    Text(
+                      "${formatAsCurrency(this.income)}",
+                      style: TextStyle(
+                        fontSize: 20.0,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -85,17 +112,30 @@ class QuickStats extends StatelessWidget {
                 Text(
                   "EXPENSE",
                   style: TextStyle(
-                      color: Colors.grey,
+                      color: Colors.redAccent,
                       //wordSpacing: 4.0,
-                      //letterSpacing: 4.0,
-                      fontSize: 12.0,
+                      letterSpacing: 1.0,
+                      fontSize: 10.0,
                       fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  "${formatAsCurrency(this.expense)}",
-                  style: TextStyle(
-                    fontSize: 20.0,
-                  ),
+                Row(
+                  children: <Widget>[
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text("\$", style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12.0),),
+                      ],
+                    ),
+                    Text(
+                      "${formatAsCurrency(this.expense)}",
+                      style: TextStyle(
+                        fontSize: 20.0,
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
