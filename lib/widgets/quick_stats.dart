@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class QuickStats extends StatelessWidget {
+class QuickStats extends StatefulWidget {
   final double balance;
   final double expense;
   final double income;
@@ -23,12 +24,18 @@ class QuickStats extends StatelessWidget {
     '9': {"sp": '\u2079', "sb": '\u2089'},
   };
 
-  //Creates a string with the decimal points as superscripts
+  @override
+  _QuickStatsState createState() => _QuickStatsState();
+}
+
+class _QuickStatsState extends State<QuickStats> {
+  bool searchStatCrossfade = false;
+  final TextEditingController _controller =
+      TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
   String formatAsCurrency(double value) {
-    String num = value.toStringAsFixed(2);
-    var s =
-        "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
-    return "${NumberFormat.compactCurrency(symbol: "").format(value)}.$s";
+    return "${NumberFormat.compactCurrency(symbol: "").format(value)}";
   }
 
   @override
@@ -53,95 +60,178 @@ class QuickStats extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text("\$", style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12.0),),
+                Text(
+                  "\$",
+                  style: TextStyle(
+                      color: Colors.grey,
+                      //fontFamily: "DMSerifDisplay",
+                      fontSize: 10.0),
+                ),
               ],
             ),
             Text(
-              "${formatAsCurrency(this.balance)}",
+              "${formatAsCurrency(this.widget.balance)}",
               style: TextStyle(
+                //fontFamily: "DMSerifDisplay",
                 fontSize: 28.0,
               ),
             ),
           ],
         ),
-        Row(
-          //crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        AnimatedCrossFade(
+            alignment: Alignment.center,
+            firstCurve: Curves.easeIn,
+            secondCurve: Curves.easeIn,
+            //sizeCurve: Curves.easeIn,
+            firstChild: Row(
+              //crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.max,
               children: <Widget>[
-                Text(
-                  "INCOME",
-                  style: TextStyle(
-                      color: Colors.green,
-                      //wordSpacing: 4.0,
-                      letterSpacing: 1.0,
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.bold),
-                ),
-                Row(
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text("\$", style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12.0),),
-                      ],
-                    ),
                     Text(
-                      "${formatAsCurrency(this.income)}",
+                      "INCOME",
                       style: TextStyle(
-                        fontSize: 20.0,
-                      ),
+                          color: Colors.green,
+                          //wordSpacing: 4.0,
+                          letterSpacing: 1.0,
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              "\$",
+                              style: TextStyle(
+                                  //fontFamily: "DMSerifDisplay",
+                                  color: Colors.grey,
+                                  fontSize: 10.0),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          "${formatAsCurrency(this.widget.income)}",
+                          style: TextStyle(
+                            //fontFamily: "DMSerifDisplay",
+                            fontSize: 20.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            Padding(padding: EdgeInsets.symmetric(horizontal: 8.0)),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  "EXPENSE",
-                  style: TextStyle(
-                      color: Colors.redAccent,
-                      //wordSpacing: 4.0,
-                      letterSpacing: 1.0,
-                      fontSize: 10.0,
-                      fontWeight: FontWeight.bold),
-                ),
-                Row(
+                Padding(padding: EdgeInsets.symmetric(horizontal: 8.0)),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text("\$", style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12.0),),
-                      ],
-                    ),
                     Text(
-                      "${formatAsCurrency(this.expense)}",
+                      "EXPENSE",
                       style: TextStyle(
-                        fontSize: 20.0,
-                      ),
+                          color: Colors.redAccent,
+                          //wordSpacing: 4.0,
+                          letterSpacing: 1.0,
+                          fontSize: 10.0,
+                          fontWeight: FontWeight.bold),
                     ),
+                    Row(
+                      children: <Widget>[
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              "\$",
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  // fontFamily: "DMSerifDisplay",
+                                  fontSize: 10.0),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          "${formatAsCurrency(this.widget.expense)}",
+                          style: TextStyle(
+                            //fontFamily: "DMSerifDisplay",
+                            fontSize: 20.0,
+                          ),
+                        ),
+                      ],
+                    )
                   ],
-                )
+                ),
+                Spacer(),
+                IconButton(
+                    iconSize: 14.0,
+                    icon: Icon(FontAwesomeIcons.searchDollar),
+                    onPressed: () {
+                      setState(() {
+                        searchStatCrossfade = !searchStatCrossfade;
+                      });
+                    })
               ],
             ),
-          ],
-        )
+            secondChild: Row(
+              children: <Widget>[
+                Expanded(
+                    child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  decoration: InputDecoration(
+                    hintText: "Search transactions",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    suffix: IconButton(
+                        iconSize: 12.0,
+                        icon: Icon(FontAwesomeIcons.backspace),
+                        onPressed: () {
+                          _controller.clear();
+                        }),
+                  ),
+                  maxLines: 1,
+                  style: TextStyle(
+                      fontFamily: "Raleway",
+                      fontSize: 16.0,
+                      color: Colors.black54),
+                  cursorColor: Colors.blueGrey,
+                  //backgroundCursorColor: Colors.blue,
+                )),
+                IconButton(
+                    iconSize: 12.0,
+                    icon: Icon(FontAwesomeIcons.times),
+                    onPressed: () {
+                      setState(() {
+                        if(_focusNode.hasFocus){
+                          _focusNode.unfocus();
+                        }
+                        searchStatCrossfade = !searchStatCrossfade;
+                      });
+                    })
+              ],
+            ),
+            crossFadeState: searchStatCrossfade
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: Duration(milliseconds: 400))
       ],
     );
   }
+
+  @override
+  void dispose() {
+    if(_focusNode.hasFocus){
+      _focusNode.unfocus();
+    }
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+
 }
