@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart' as Collections;
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:billie/models/MPesaMessage.dart';
@@ -10,7 +12,7 @@ class SmsServiceProxy {
   static const INCOME = "incomeSum";
   static const EXPENSE = "expenseSum";
   static const FEES = "fees";
-  static const MAX = "max";
+  static const BALANCE = "max";
 
   static SmsServiceProxy getInstance() {
     return sSmsServiceProxyInstance == null
@@ -39,12 +41,12 @@ class SmsServiceProxy {
               ///the other thread!!??
               /// Map messageMap = messageBody as Map<String,String>;
               ///print("m: ${messageBody.values.first} \n");
-
               MPMessage m = MPMessage.fromBody(
                   parser,
                   messageBody.values.first,
                   messageBody.keys.first);
                   if(m.mpMessageType != MPMessageType.MP_TYPE_UNKNOWN){
+                    //myController.sink.add(m);
                     mpesaMessages.add(m);
                   }
             });
@@ -65,7 +67,7 @@ class SmsServiceProxy {
     double expenseSum = 0;
     double incomeSum = 0;
     double txFees = 0;
-    double max = messages.first.txBal;
+    double balance = messages.first.txBal;
     messages.forEach((MPMessage m){
       switch(m.mpMessageType){
         case MPMessageType.MP_TYPE_PAYBILL:
@@ -83,10 +85,10 @@ class SmsServiceProxy {
           break;
       }
     });
-    return {INCOME: incomeSum, EXPENSE: expenseSum, FEES: txFees, MAX: max};
+    return {INCOME: incomeSum, EXPENSE: expenseSum, FEES: txFees, BALANCE: balance};
   }
 
-  Future<Map<DateTime,List<MPMessage>>> chunkByDate(List<MPMessage> flatMessages) async{
+  Future<Map<DateTime,List<MPMessage>>> chunkByDate(List<MPMessage> flatMessages) async {
     return Collections.groupBy(flatMessages, (MPMessage el) {
       return DateTime(el.txDate.year,el.txDate.month, el.txDate.day);
     });
