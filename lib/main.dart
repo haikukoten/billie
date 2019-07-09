@@ -10,6 +10,7 @@ import 'package:billie/widgets/quick_stats.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 import 'models/MPesaMessage.dart';
 
@@ -22,18 +23,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Billie',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        fontFamily: "Raleway"
-      ),
+          // This is the theme of your application.
+          //
+          // Try running your application with "flutter run". You'll see the
+          // application has a blue toolbar. Then, without quitting the app, try
+          // changing the primarySwatch below to Colors.green and then invoke
+          // "hot reload" (press "r" in the console where you ran "flutter run",
+          // or simply save your changes to "hot reload" in a Flutter IDE).
+          // Notice that the counter didn't reset back to zero; the application
+          // is not restarted.
+          primarySwatch: Colors.blue,
+          fontFamily: "Raleway"),
       home: BillieWallet(),
     );
   }
@@ -47,16 +47,58 @@ class BillieWallet extends StatefulWidget {
   _BillieWalletState createState() => _BillieWalletState();
 }
 
-class _BillieWalletState extends State<BillieWallet> {
+enum WhyFarther { harder, smarter, selfStarter, tradingCharter }
 
+class _BillieWalletState extends State<BillieWallet>
+    with TickerProviderStateMixin {
   String _batteryLevel = "Unknown";
-  SmsRetrieverBloc smsRetrieverBloc;
-  ScrollController _scrollController = ScrollController();
 
-  List<Widget> slivers = new List<Widget>();
+  SmsRetrieverBloc smsRetrieverBloc;
+  bool _isVisible;
+  ScrollController _scrollController;
+  Function listener;
+
+  List<Widget> slivers;
+
+  @override
+  void initState() {
+    super.initState();
+    slivers = List<Widget>();
+    _isVisible = false;
+    _scrollController = ScrollController();
+    listener = () {
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        if (_isVisible == true) {
+          /* only set when the previous state is false
+             * Less widget rebuilds
+             */
+          print("**** $_isVisible up"); //Move IO away from setState
+          //setState((){
+          _isVisible = false;
+          //});
+        }
+      } else {
+        if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.forward) {
+          if (_isVisible == false) {
+            /* only set when the previous state is false
+               * Less widget rebuilds
+               */
+            print("**** $_isVisible down"); //Move IO away from setState
+            //setState((){
+            _isVisible = true;
+            //});
+          }
+        }
+      }
+    };
+    //_scrollController.addListener(listener);
+  }
 
   @override
   void dispose() {
+    //_scrollController.removeListener(listener);
     smsRetrieverBloc.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -64,96 +106,239 @@ class _BillieWalletState extends State<BillieWallet> {
 
   @override
   Widget build(BuildContext context) {
-    slivers.add(SliverAppBar(
-      pinned: false,
-      //expandedHeight: 120.0,
-      backgroundColor: Colors.white,
-      title: Text(
-        "Billie",
-        style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            //letterSpacing: 1.0,
-            fontFamily: "DMSerifDisplay"),
-      ),
-      centerTitle: true,
-      elevation: 0.0,
-      leading: IconButton(
-        iconSize: 16.0,
-          icon: Icon(
-            FontAwesomeIcons.bars,
-            color: Colors.black,
-          ),
-          onPressed: () {
-            print("$_batteryLevel");
-          }),
-      actions: <Widget>[
-        IconButton(
-            iconSize: 16.0,
-            icon: Icon(
-              FontAwesomeIcons.wallet,
+    slivers.add(
+      SliverAppBar(
+        pinned: false,
+        floating: true,
+        expandedHeight: 64.0,
+        backgroundColor: Colors.white,
+        title: Text(
+          "Billie",
+          style: const TextStyle(
               color: Colors.black,
+              fontWeight: FontWeight.bold,
+              //letterSpacing: 1.0,
+              fontFamily: "DMSerifDisplay"),
+        ),
+        centerTitle: true,
+        elevation: 0.0,
+        leading: Builder(
+            //stream: null,
+            builder: (innerContext) {
+          return IconButton(
+              iconSize: 16.0,
+              icon: Icon(
+                FontAwesomeIcons.bars,
+                color: Colors.black,
+              ),
+              onPressed: () {
+                ScaffoldState _scaffoldState = Scaffold.of(innerContext);
+                !_scaffoldState.isDrawerOpen
+                    ? _scaffoldState.openDrawer()
+                    : _scaffoldState.isDrawerOpen;
+              });
+        }),
+        actions: <Widget>[
+          /*Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            child: DropdownButton(
+              elevation: 2,
+              value: 'Mens',
+              items: <String>['Mens', 'Womans'].map((String value) {
+                return new DropdownMenuItem<String>(
+                  value: value,
+                  child: new Text(value),
+                );
+              }).toList(),
+              onChanged: (e) {
+                print(e);
+              },
+              underline: Container(),
+              icon: Icon(
+                FontAwesomeIcons.wallet,
+                color: Colors.black,
+              ),
+              iconSize: 16.0,
             ),
-            onPressed: () {}),
-      ],
-    ),);
+          ),*/
+          IconButton(
+              iconSize: 16.0,
+              icon: Icon(
+                FontAwesomeIcons.wallet,
+                color: Colors.black,
+              ),
+              onPressed: () {
+                //TODO: Use stack with some sort of handler for wallet functions
+              }),
+        ],
+      ),
+    );
 
-    slivers.add( SliverPersistentHeader(pinned: true, floating: false,delegate : WalletStatistic()),);
-    slivers.add( SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),);
-    slivers.add( SliverToBoxAdapter(child: Divider(),));
-    slivers.add( SliverToBoxAdapter(child: ListTile(
-      dense: true,
-      //trailing: Icon(FontAwesomeIcons.history,size: 10.0,),
-      title: const Text("TRANSACTION HISTORY",
-        style: const TextStyle(
-        color: Colors.blueGrey,
-        letterSpacing: 1.0,
-        fontWeight: FontWeight.bold,
-        fontSize: 10.0
-      ),),
-    ),));
+    slivers.add(
+      SliverPersistentHeader(
+          pinned: true, floating: false, delegate: WalletStatistic()),
+    );
+    slivers.add(
+      SliverToBoxAdapter(
+        child: Container(height: 200, child: ChartWrapper()),
+      ),
+    );
+    slivers.add(SliverToBoxAdapter(
+      child: Divider(),
+    ));
+    slivers.add(SliverToBoxAdapter(
+      child: ListTile(
+        dense: true,
+        trailing: Icon(
+          FontAwesomeIcons.history, size: 14.0,
+          color: Colors.blueGrey.withOpacity(0.5), //: Colors.purple.
+        ),
+        title: const Text(
+          "TRANSACTION HISTORY",
+          style: const TextStyle(
+              color: Colors.blueGrey,
+              letterSpacing: 1.0,
+              fontWeight: FontWeight.bold,
+              fontSize: 10.0),
+        ),
+      ),
+    ));
     //slivers.add(HistoryBox());
 
-    return Scaffold(
-        backgroundColor: Colors.white,
-        drawer: Drawer(
-          //key: drawerKey,
-          child: Container(
-            color: Colors.white,
-            height: 500,
-          ),
-        ),
-        //color: Colors.purpleAccent,
-        body: SafeArea(
-          child: MPMessagesProvider(
-            child: Builder(
-              builder: (innerContext){
-                smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
-                return Material(
-                color: Colors.white,
-                child:
-                StreamBuilder<Object>(
+    Widget _createScrollViewArea() {
+      return MPMessagesProvider(
+        child: Builder(
+          builder: (innerContext) {
+            smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
+            return Material(
+              color: Colors.white,
+              child: StreamBuilder<Object>(
                   stream: smsRetrieverBloc.historyChunks,
                   builder: (context, AsyncSnapshot<Object> snapshot) {
                     return CustomScrollView(
                       controller: _scrollController,
                       physics: BouncingScrollPhysics(),
                       key: PageStorageKey<String>("csrv"),
-                      slivers: slivers..addAll(SliverSectionBuilder().create(snapshot)),
+                      slivers: slivers
+                        ..addAll(SliverSectionBuilder().create(snapshot)),
                     );
-                  }
+                  }),
+            );
+          },
+        ),
+      );
+    }
+
+    return Scaffold(
+        backgroundColor: Colors.white,
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+        /*floatingActionButton: FloatingActionButton(
+            child: Icon(FontAwesomeIcons.scroll,size: 16.0,),
+            backgroundColor: Colors.purpleAccent,
+            onPressed: (){
+              _scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
+            }),*/
+        drawer: Drawer(
+          //key: drawerKey,
+          child: ListView(
+            physics: BouncingScrollPhysics(),
+            // Important: Remove any padding from the ListView.
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                  decoration: BoxDecoration(
+                    // backgroundBlendMode: BlendMode.darken,
+                    image: DecorationImage(
+                        fit: BoxFit.cover,
+                        /*colorFilter: ColorFilter.matrix([
+                            0, 1.0,   0,  0, 0,
+                            0, 1.0,   0,  0, 0,
+                            0, 0.6,  1.0, 0, 0,
+                            0, 0,    0, 1.0, 0,
+                          ]),*/
+                        // colorFilter: ColorFilter.mode(Colors.black38, BlendMode.darken),
+                        image: NetworkImage(
+                          "https://source.unsplash.com/640x480/?money",
+                        )),
+                  ),
+                  child: Stack(children: [
+                    Positioned(
+                        //left: 0,
+                        bottom: 0,
+                        child: CircleAvatar(
+                          radius: 32.0,
+                          backgroundColor: Colors.transparent,
+                          child: ClipOval(
+                              child: FadeInImage.memoryNetwork(
+                                  placeholder: kTransparentImage,
+                                  image:
+                                      "https://randomuser.me/api/portraits/men/${math.Random().nextInt(99)}.jpg")),
+                        )),
+                  ])),
+              ListTile(
+                dense: true,
+                leading: IconButton(
+                  icon: Icon(FontAwesomeIcons.userCircle),
+                  iconSize: 16.0,
+                  onPressed: () {},
                 ),
-              );},
-            ),
+                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+                title: Text(
+                  'Account',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("Manage your account"),
+                onTap: () {
+                  // Update the state of the app.
+                  // ...
+                },
+              ),
+              ListTile(
+                dense: true,
+                leading: IconButton(
+                  icon: Icon(FontAwesomeIcons.cloudUploadAlt),
+                  iconSize: 16.0,
+                  onPressed: () {},
+                ),
+                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+                title: Text(
+                  'Backup',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("Select backup location"),
+                onTap: () {
+                  // Update the state of the app.
+                  // ...
+                },
+              ),
+              ListTile(
+                dense: true,
+                leading: IconButton(
+                  icon: Icon(FontAwesomeIcons.toolbox),
+                  iconSize: 16.0,
+                  onPressed: () {},
+                ),
+                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+                title: Text(
+                  'Settings',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("Configure application settings"),
+                onTap: () {
+                  // Update the state of the app.
+                  // ...
+                },
+              ),
+            ],
           ),
-        ));
+        ),
+        //color: Colors.purpleAccent,
+        body: SafeArea(child: Scrollbar(child: _createScrollViewArea())));
     //);
   }
 }
 
 class WalletStatistic extends SliverPersistentHeaderDelegate {
-
-
   SmsRetrieverBloc smsRetrieverBloc;
 
   @override
@@ -173,18 +358,17 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
                       color: Colors.white,
                       margin: EdgeInsets.all(0.0),
                       elevation: shrinkOffset == 0 ? 0.0 : 2.0,
-                  //elevation: 2.0,
-                  shape:  RoundedRectangleBorder(
+                      //elevation: 2.0,
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(0.0),
                       ),
                       //height: 182.0,
                       //padding:EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       //alignment: Alignment.center,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: WalletBalanceWidget(
-                          snapshot.data
-                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
+                        child: WalletBalanceWidget(snapshot.data),
                       ))
                   : Container(
                       height: 200,
@@ -231,63 +415,83 @@ class WalletBalanceWidget extends StatelessWidget {
 }
 
 class SliverSectionBuilder {
+  static const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
 
-  static const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  String capitalize(String f){
+  String capitalize(String f) {
     return "${f[0].toUpperCase()}${f.substring(1)}";
   }
 
-  List<Widget> create(AsyncSnapshot items){
+  List<Widget> create(AsyncSnapshot items) {
     //var keys = items.keys.toList();
     //var values = items.values.toList();
-    switch(items.connectionState){
+    switch (items.connectionState) {
       case ConnectionState.done:
       case ConnectionState.waiting:
       case ConnectionState.active:
         if (items.hasData) {
-          return  (items.data as Map<DateTime,List>).keys.map((DateTime e) =>
-              SliverStickyHeaderBuilder(
+          return (items.data as Map<DateTime, List>)
+              .keys
+              .map((DateTime dateKey) => SliverStickyHeaderBuilder(
                   builder: (context, state) {
-                     return Card(
-                       margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    elevation: state.isPinned ? (2.0) : 1.0 - (state.scrollPercentage),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0)
-                    ),
-                    //padding: const EdgeInsets.all(8.0),
-                    child: new Container(
-                      height: 30.0,
-                      color:Colors.white.withOpacity(math.min(0.5, 1.0 - state.scrollPercentage)),
-                      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: new Text(
-                              DateTime.now().difference(e) < Duration(days: 30)
-                                  ? '${timeago.format(e).toUpperCase()}'
-                                  : '${timeago.format(e).toUpperCase()} on ${ months[e.month]} ${e.day}',
-                              style: TextStyle(
-                                fontSize: 12.0,
-                                //fontWeight: FontWeight.bold,
-                                //color: state.isPinned ? Colors.white : Colors.black87
+                    return Card(
+                      margin:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      elevation: state.isPinned
+                          ? (2.0)
+                          : 1.0 - (state.scrollPercentage),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0)),
+                      //padding: const EdgeInsets.all(8.0),
+                      child: new Container(
+                        height: 30.0,
+                        color: Colors.white.withOpacity(
+                            math.min(0.5, 1.0 - state.scrollPercentage)),
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 8.0),
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: new Text(
+                                DateTime.now().difference(dateKey) <
+                                        Duration(days: 30)
+                                    ? '${timeago.format(dateKey).toUpperCase()}'
+                                    //Error accessing dates here!! debug!
+                                    : '${timeago.format(dateKey).toUpperCase()} on ${months[(dateKey.month - 1)]} ${dateKey.day ?? "Unknown"}',
+                                style: TextStyle(
+                                    fontSize: 12.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: state.isPinned
+                                        ? Colors.purple
+                                        : Colors.purple.withOpacity(0.7)),
                               ),
                             ),
-                          ),
-                          Icon(FontAwesomeIcons.history, size: 14.0,)
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );},
+                    );
+                  },
                   sliver: new SliverList(
                     delegate: new SliverChildBuilderDelegate(
-                          (context, i) => HistoryTile(items.data[e][i]),
-                      childCount: items.data[e].length,
+                      (context, index) =>
+                          HistoryTile(items.data[dateKey][index]),
+                      childCount: items.data[dateKey].length,
                     ),
-                  ))
-          ).toList();
+                  )))
+              .toList();
         } else {
           return [];
         }
@@ -323,8 +527,7 @@ class ChartWrapper extends StatelessWidget {
                           //TODO: Use a custom scale to better handle missing values
                           bezierChartScale: BezierChartScale.WEEKLY,
                           toDate: data.first.xAxis,
-                          selectedDate:
-                              data.first.xAxis,
+                          selectedDate: data.first.xAxis,
                           //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
                           series: [
                             BezierLine(
@@ -364,7 +567,6 @@ class ChartWrapper extends StatelessWidget {
 }
 
 class HistoryTile extends StatelessWidget {
-
   final MPMessage message;
 
   HistoryTile(this.message);
@@ -387,24 +589,25 @@ class HistoryTile extends StatelessWidget {
   String formatAsCurrency(double value) {
     //String num = value.toStringAsFixed(2);
     //var s =
-     //   "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
+    //   "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
     return NumberFormat.compactCurrency(symbol: "\$").format(value);
   }
 
-
   @override
   Widget build(BuildContext context) {
-    switch(message.mpMessageType){
+    switch (message.mpMessageType) {
       case MPMessageType.MP_TYPE_RECEIVE:
         return ListTile(
           leading: IconButton(
-            color: Colors.green,
+              color: Colors.green,
               iconSize: 20.0,
               icon: Icon(FontAwesomeIcons.moneyCheckAlt),
-              onPressed: (){}),
-          title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
+              onPressed: () {}),
+          title: Text(
+              "${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
           dense: true,
-          subtitle: Text(formatAsCurrency(message.txAmount),
+          subtitle: Text(
+            formatAsCurrency(message.txAmount),
           ),
         );
       case MPMessageType.MP_TYPE_UNKNOWN:
@@ -412,7 +615,8 @@ class HistoryTile extends StatelessWidget {
           dense: true,
           leading: IconButton(
               iconSize: 20.0,
-              icon: Icon(FontAwesomeIcons.tools), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.tools),
+              onPressed: () {}),
           title: Text("Service Message!"),
         );
       case MPMessageType.MP_TYPE_AIRTIME:
@@ -420,20 +624,26 @@ class HistoryTile extends StatelessWidget {
           leading: IconButton(
               iconSize: 20.0,
               color: Colors.blue,
-              icon: Icon(FontAwesomeIcons.mobile), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.mobile),
+              onPressed: () {}),
           title: Text("Airtime purchase"),
           dense: true,
-          subtitle: Text(formatAsCurrency(message.txAmount),),
+          subtitle: Text(
+            formatAsCurrency(message.txAmount),
+          ),
         );
       default:
         return ListTile(
           leading: IconButton(
               color: Colors.redAccent,
               iconSize: 20.0,
-              icon: Icon(FontAwesomeIcons.creditCard), onPressed: (){}),
+              icon: Icon(FontAwesomeIcons.creditCard),
+              onPressed: () {}),
           dense: true,
-          title: Text("${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
-          subtitle: Text("${formatAsCurrency(message.txAmount)} | Fees: ${formatAsCurrency(message.txFees)}",
+          title: Text(
+              "${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
+          subtitle: Text(
+            "${formatAsCurrency(message.txAmount)} | Fees: ${formatAsCurrency(message.txFees)}",
           ),
         );
     }

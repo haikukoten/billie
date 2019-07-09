@@ -9,6 +9,7 @@ enum MPMessageType {
   MP_TYPE_AIRTIME,
   MP_TYPE_TXBAL,
   MP_TYPE_UNKNOWN,
+  MP_TYPE_MSHWARI //Implement handling sooner or later
 }
 
 /*
@@ -56,19 +57,23 @@ class SillyMPMessageParser {
     double transactionCost = 0;
 
     int moneyCount = 0;
-    for (String str in exploded) {
-      //Remember to trim newlines and commas!!
-      if (str.startsWith("ksh")) {
-        //print("Str: $str, rep: $moneyCount");
-        String money = str.replaceAll("ksh", "");
-        if (moneyCount == 0) {
-          amount = double.tryParse(money.trim().replaceAll(",", ""));
-        } else if (moneyCount == 1) {
-          balance = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
-        } else if (moneyCount == 2) {
-          transactionCost = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""));
+    if (txType == MPMessageType.MP_TYPE_UNKNOWN){
+      //skip as is un-needed
+    } else {
+      for (String str in exploded) {
+        //Remember to trim newlines and commas!!
+        if (str.startsWith("ksh")) {
+          //print("Str: $str, rep: $moneyCount");
+          String money = str.replaceAll("ksh", "");
+          if (moneyCount == 0) {
+            amount = double.tryParse(money.trim().replaceAll(",", ""))?? 0;
+          } else if (moneyCount == 1) {
+            balance = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""))?? 0;
+          } else if (moneyCount == 2) {
+            transactionCost = double.tryParse(money.substring(0, money.length - 1).trim().replaceAll(",", ""))?? 0;
+          }
+          moneyCount++;
         }
-        moneyCount++;
       }
     }
     return MPMessage(participant, txCode, txType, transactionCost, amount, balance, date);
