@@ -168,7 +168,7 @@ class _QuickStatsState extends State<QuickStats> {
                 ),
                 Spacer(),
                 IconButton(
-                    iconSize: 14.0,
+                    iconSize: 16.0,
                     icon: Icon(FontAwesomeIcons.searchDollar),
                     onPressed: () {
                       setState(() {
