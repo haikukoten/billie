@@ -1,16 +1,16 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'dart:math' as math;
 
+import 'package:transparent_image/transparent_image.dart';
 
-enum FrontPanels {
-  searchPanel,
-  infoPanel
-}
+enum FrontPanels { searchPanel, infoPanel }
 
 ///Model to track which panel will be rendered onto the top of the stack
-class PanelModel extends Model{
-
+class PanelModel extends Model {
   ///
   FrontPanels _activePanel;
 
@@ -29,16 +29,188 @@ class PanelModel extends Model{
     );
   }*/
 
-  Widget get activePanel =>
-      _activePanel == FrontPanels.searchPanel ? SearchPanel() : InfoPanel();
+  Widget get activePanel => InkWell(
+        //onTap: (){activate(FrontPanels.infoPanel);},
+        child: _activePanel == FrontPanels.searchPanel
+            ? SearchActivity()
+            : InfoPanel(),
+      );
 
   void activate(FrontPanels panel) {
     _activePanel = panel;
     notifyListeners();
   }
-
 }
 
+class SearchActivity extends StatefulWidget {
+  @override
+  _SearchActivityState createState() => _SearchActivityState();
+}
+
+class _SearchActivityState extends State<SearchActivity> {
+  TextEditingController controller;
+  FocusNode focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController();
+    focusNode = FocusNode();
+  }
+
+  void clearTextCallBack() {
+    setState(() {
+      controller.clear();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+    focusNode.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scrollbar(
+      child: CustomScrollView(
+        physics: BouncingScrollPhysics(),
+        slivers: <Widget>[
+          SliverPersistentHeader(
+            floating: true,
+              delegate: SearchActivityDelegate(
+                  editingController: controller,
+                  focusNode: focusNode,
+                  clearCallBack: this.clearTextCallBack)),
+          SliverToBoxAdapter(
+            child: Container(
+              height: 24.0,
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text("CONTACT RESULTS", style: TextStyle(
+                fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
+              ),),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Container(
+              height: 72.0,
+              child: ListView(
+                physics: BouncingScrollPhysics(),
+                scrollDirection: Axis.horizontal,
+                children: List.generate(12, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        CircleAvatar(
+                          radius: 24.0,
+                          child: ClipOval(
+                            child: FadeInImage.memoryNetwork(
+                                placeholder: kTransparentImage,
+                                image:
+                                    "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg"),
+                          ),
+                        ),
+                        Text("User $index", style: TextStyle(
+                          fontSize: 12.0
+                        ),)
+                      ],
+                    ),
+                  );
+                })
+                  ..insert(0,
+                      Padding(padding: EdgeInsets.symmetric(horizontal: 16.0))),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Container(
+              height: 24.0,
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text("MESSAGE RESULTS", style: TextStyle(
+                  fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
+              ),),
+            ),
+          ),
+          SliverList(delegate: SliverChildBuilderDelegate(
+              (c,i) => ListTile(
+                leading: IconButton(
+                  iconSize: 20.0,
+                    icon: Icon(
+                      FontAwesomeIcons.envelopeOpenText, color: Colors.purpleAccent,),
+                    onPressed: null,
+                ),
+                title: Text("Some Walking!"),
+                dense: true,
+                subtitle: Text("$i My phone just realized and some software"),
+              ), childCount: 30
+          ))
+        ],
+      ),
+    );
+  }
+}
+
+class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController editingController;
+  final FocusNode focusNode;
+  final Function clearCallBack;
+
+  SearchActivityDelegate(
+      {this.editingController, this.focusNode, this.clearCallBack});
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // TODO: implement build
+    return Container(
+      color: Colors.white.withOpacity(0.7),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+          child: TextField(
+            onTap: () {},
+            maxLines: 1,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+              hintText: "Search Transactions",
+              suffix: IconButton(
+                  iconSize: 12.0,
+                  icon: Icon(FontAwesomeIcons.backspace),
+                  onPressed: () {
+                    if (focusNode.hasFocus) {
+                      focusNode.unfocus();
+                      this.clearCallBack();
+                    }
+                  }),
+            ),
+            focusNode: focusNode,
+            controller: editingController,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  // TODO: implement maxExtent
+  double get maxExtent => 52;
+
+  @override
+  // TODO: implement minExtent
+  double get minExtent => 48;
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
+    // TODO: implement shouldRebuild
+    return this != oldDelegate;
+  }
+}
 
 /// Creation of front layers, both [SearchPanel] and [InfoPanel] as well as
 /// back layer, [BackPanel]
@@ -46,13 +218,14 @@ class PanelModel extends Model{
 class SearchPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
+    return ScopedModelDescendant<PanelModel>(
+      builder: (_context, _widget, model) => model.activePanel,
+      /*child: Center(
         child: Text(
           'Panel ONE',
           style: TextStyle(fontSize: 42.0),
         ),
-      ),
+      ),*/
     );
   }
 }
@@ -100,6 +273,7 @@ class _BackdropPanel extends StatelessWidget {
       padding: padding,
       child: Material(
         elevation: 12.0,
+        color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16.0),
           topRight: Radius.circular(16.0),
@@ -115,10 +289,12 @@ class _BackdropPanel extends StatelessWidget {
               onTap: onTap,
               child: Container(height: titleHeight, child: title),
             ),
+
             ///Simple Divider
             Divider(
               height: 1.0,
             ),
+
             ///Child goes here!
             Expanded(
               child: child,
@@ -148,16 +324,17 @@ class Backdrop extends StatefulWidget {
 
   Backdrop(
       {@required this.frontLayer,
-        @required this.backLayer,
-        Key key,
-        this.frontPanelOpenHeight = 0.0,
-        this.frontHeaderHeight = 48.0,
-        this.frontPanelPadding = const EdgeInsets.all(0.0),
-        this.frontHeaderVisibleClosed = true,
-        this.panelVisible,
-        this.frontHeader})
+      @required this.backLayer,
+      Key key,
+      this.frontPanelOpenHeight = 0.0,
+      this.frontHeaderHeight = 48.0,
+      this.frontPanelPadding = const EdgeInsets.all(0.0),
+      this.frontHeaderVisibleClosed = true,
+      this.panelVisible,
+      this.frontHeader})
       : assert(frontLayer != null),
-        assert(backLayer != null), super(key: key);
+        assert(backLayer != null),
+        super(key: key);
 
   @override
   createState() => BackdropState();
@@ -215,7 +392,7 @@ class BackdropState extends State<Backdrop>
 
   bool get _backdropPanelVisible =>
       _controller.status == AnimationStatus.completed ||
-          _controller.status == AnimationStatus.forward;
+      _controller.status == AnimationStatus.forward;
 
   void toggleBackdropPanelVisibility() => _controller.fling(
       velocity: _backdropPanelVisible ? -_kFlingVelocity : _kFlingVelocity);
@@ -243,7 +420,7 @@ class BackdropState extends State<Backdrop>
     else
       _controller.fling(
           velocity:
-          _controller.value < 0.5 ? -_kFlingVelocity : _kFlingVelocity);
+              _controller.value < 0.5 ? -_kFlingVelocity : _kFlingVelocity);
   }
 
   @override
@@ -273,6 +450,7 @@ class BackdropState extends State<Backdrop>
                 onVerticalDragEnd: _handleDragEnd,
                 title: widget.frontHeader,
                 titleHeight: widget.frontHeaderHeight,
+
                 ///Inject a padding to resolve some lost slice of the viewport when a custom height
                 ///open Height is in use!!
                 child: Padding(

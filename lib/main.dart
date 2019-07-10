@@ -66,35 +66,7 @@ class _BillieWalletState extends State<BillieWallet>
     super.initState();
     slivers = List<Widget>();
     _scrollController = ScrollController();
-    //panelModel = PanelModel(FrontPanels.searchPanel);
-    /*listener = () {
-      if (_scrollController.position.userScrollDirection ==
-          ScrollDirection.reverse) {
-        if (_isVisible == true) {
-          /* only set when the previous state is false
-             * Less widget rebuilds
-             */
-          print("**** $_isVisible up"); //Move IO away from setState
-          //setState((){
-          _isVisible = false;
-          //});
-        }
-      } else {
-        if (_scrollController.position.userScrollDirection ==
-            ScrollDirection.forward) {
-          if (_isVisible == false) {
-            /* only set when the previous state is false
-               * Less widget rebuilds
-               */
-            print("**** $_isVisible down"); //Move IO away from setState
-            //setState((){
-            _isVisible = true;
-            //});
-          }
-        }
-      }
-    };*/
-    //_scrollController.addListener(listener);
+    panelModel = PanelModel(FrontPanels.searchPanel);
   }
 
   @override
@@ -103,6 +75,15 @@ class _BillieWalletState extends State<BillieWallet>
     smsRetrieverBloc.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+
+  void switchScene(FrontPanels panelType){
+    if (panelModel.activePanelType == panelType) {
+      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+    } else
+      panelModel.activate(panelType);
+      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
   }
 
   @override
@@ -201,131 +182,141 @@ class _BillieWalletState extends State<BillieWallet>
       );
     }
 
+
+    Widget renderDrawerListItems(){
+      return  ListView(
+        physics: BouncingScrollPhysics(),
+        // Important: Remove any padding from the ListView.
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: NetworkImage(
+                      "https://source.unsplash.com/640x480/?money",
+                    )),
+              ),
+              child: Stack(children: [
+                Positioned(
+                  //left: 0,
+                    bottom: 0,
+                    child: CircleAvatar(
+                      radius: 32.0,
+                      backgroundColor: Colors.transparent,
+                      child: ClipOval(
+                          child: FadeInImage.memoryNetwork(
+                              placeholder: kTransparentImage,
+                              image:
+                              "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
+                    )),
+              ])),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.userCircle),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Account',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Manage your account"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.cloudUploadAlt),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Backup',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Select backup location"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.cloudDownloadAlt),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Restore',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Restore from previous backup"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.toolbox),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Settings',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Configure application settings"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
+        ],
+      );
+    }
+
     return Scaffold(
         backgroundColor: Colors.white,
         floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
         /*floatingActionButton: FloatingActionButton(
-            child: Icon(FontAwesomeIcons.scroll,size: 16.0,),
+            child: Icon(FontAwesomeIcons.commentsDollar,size: 16.0,),
             backgroundColor: Colors.purpleAccent,
             onPressed: (){
               _scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
             }),*/
         drawer: Drawer(
-          //key: drawerKey,
-          child: ListView(
-            physics: BouncingScrollPhysics(),
-            // Important: Remove any padding from the ListView.
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(
-                          "https://source.unsplash.com/640x480/?money",
-                        )),
-                  ),
-                  child: Stack(children: [
-                    Positioned(
-                        //left: 0,
-                        bottom: 0,
-                        child: CircleAvatar(
-                          radius: 32.0,
-                          backgroundColor: Colors.transparent,
-                          child: ClipOval(
-                              child: FadeInImage.memoryNetwork(
-                                  placeholder: kTransparentImage,
-                                  image:
-                                      "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
-                        )),
-                  ])),
-              ListTile(
-                dense: true,
-                leading: IconButton(
-                  icon: Icon(FontAwesomeIcons.userCircle),
-                  iconSize: 16.0,
-                  color: Colors.purpleAccent,
-                  onPressed: () {},
-                ),
-                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-                title: Text(
-                  'Account',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text("Manage your account"),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-              ListTile(
-                dense: true,
-                leading: IconButton(
-                  icon: Icon(FontAwesomeIcons.cloudUploadAlt),
-                  iconSize: 16.0,
-                  color: Colors.purpleAccent,
-                  onPressed: () {},
-                ),
-                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-                title: Text(
-                  'Backup',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text("Select backup location"),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-              ListTile(
-                dense: true,
-                leading: IconButton(
-                  icon: Icon(FontAwesomeIcons.cloudDownloadAlt),
-                  iconSize: 16.0,
-                  color: Colors.purpleAccent,
-                  onPressed: () {},
-                ),
-                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-                title: Text(
-                  'Restore',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text("Restore from previous backup"),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-              ListTile(
-                dense: true,
-                leading: IconButton(
-                  icon: Icon(FontAwesomeIcons.toolbox),
-                  iconSize: 16.0,
-                  color: Colors.purpleAccent,
-                  onPressed: () {},
-                ),
-                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-                title: Text(
-                  'Settings',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text("Configure application settings"),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
-              ),
-            ],
-          ),
+          child: renderDrawerListItems()
         ),
         //color: Colors.purpleAccent,
         body: SafeArea(
             child: MPMessagesProvider(
           child: Backdrop(
               key: _globalBackdropKey,
-              frontLayer: SearchPanel(),
+              frontLayer: ScopedModel<PanelModel>(
+                model: panelModel,
+                child: SearchPanel(),
+              ),
               frontHeaderVisibleClosed: false,
               frontHeaderHeight: 35.0,
+              frontHeader: Center(
+                child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
+              ),
               frontPanelOpenHeight: 200.0,
               backLayer: Scrollbar(child: _createScrollViewArea())),
         )));
@@ -339,8 +330,6 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    //print("shOff: $shrinkOffset, overlap: $overlapsContent");
-    // TODO: implement build
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return StreamBuilder(
         stream: smsRetrieverBloc.statsStream,

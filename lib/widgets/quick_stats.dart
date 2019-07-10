@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'custom_backdrop.dart';
+
 class QuickStats extends StatefulWidget {
   final double balance;
   final double expense;
   final double income;
 
   QuickStats(
-      {@required this.balance, @required this.expense, @required this.income});
+      {@required this.balance, @required this.expense, @required this.income,});
 
   static const unicode_map = {
     // #           superscript     subscript
@@ -77,12 +79,7 @@ class _QuickStatsState extends State<QuickStats> {
             ),
           ],
         ),
-        AnimatedCrossFade(
-            alignment: Alignment.center,
-            firstCurve: Curves.easeIn,
-            secondCurve: Curves.easeIn,
-            //sizeCurve: Curves.easeIn,
-            firstChild: Row(
+            Row(
               //crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
@@ -165,59 +162,8 @@ class _QuickStatsState extends State<QuickStats> {
                     )
                   ],
                 ),
-                Spacer(),
-                IconButton(
-                    iconSize: 16.0,
-                    icon: Icon(FontAwesomeIcons.searchDollar),
-                    onPressed: () {
-                      setState(() {
-                        searchStatCrossfade = !searchStatCrossfade;
-                      });
-                    })
               ],
             ),
-            secondChild: Row(
-              children: <Widget>[
-                Expanded(
-                    child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  decoration: InputDecoration(
-                    hintText: "Search transactions",
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    suffix: IconButton(
-                        iconSize: 12.0,
-                        icon: Icon(FontAwesomeIcons.backspace),
-                        onPressed: () {
-                          _controller.clear();
-                        }),
-                  ),
-                  maxLines: 1,
-                  style: TextStyle(
-                      fontFamily: "Raleway",
-                      fontSize: 16.0,
-                      color: Colors.black54),
-                  cursorColor: Colors.blueGrey,
-                  //backgroundCursorColor: Colors.blue,
-                )),
-                IconButton(
-                    iconSize: 12.0,
-                    icon: Icon(FontAwesomeIcons.times),
-                    onPressed: () {
-                      setState(() {
-                        if(_focusNode.hasFocus){
-                          _focusNode.unfocus();
-                        }
-                        searchStatCrossfade = !searchStatCrossfade;
-                      });
-                    })
-              ],
-            ),
-            crossFadeState: searchStatCrossfade
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: Duration(milliseconds: 400))
       ],
     );
   }
