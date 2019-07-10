@@ -1,5 +1,9 @@
 import 'dart:ui';
 
+import 'package:billie/blocs/sms_retriever_bloc.dart';
+import 'package:billie/models/MPesaMessage.dart';
+import 'package:billie/providers/MPMessagesProvider.dart';
+import 'package:billie/widgets/history_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -50,6 +54,7 @@ class SearchActivity extends StatefulWidget {
 class _SearchActivityState extends State<SearchActivity> {
   TextEditingController controller;
   FocusNode focusNode;
+  SmsRetrieverBloc smsRetrieverBloc;
 
   @override
   void initState() {
@@ -73,6 +78,8 @@ class _SearchActivityState extends State<SearchActivity> {
 
   @override
   Widget build(BuildContext context) {
+    smsRetrieverBloc  = MPMessagesProvider.smsBlocOf(context);
+
     return Scrollbar(
       child: CustomScrollView(
         physics: BouncingScrollPhysics(),
@@ -82,6 +89,7 @@ class _SearchActivityState extends State<SearchActivity> {
               delegate: SearchActivityDelegate(
                   editingController: controller,
                   focusNode: focusNode,
+                  smsRetrieverBloc: smsRetrieverBloc,
                   clearCallBack: this.clearTextCallBack)),
           SliverToBoxAdapter(
             child: Container(
@@ -136,19 +144,35 @@ class _SearchActivityState extends State<SearchActivity> {
               ),),
             ),
           ),
-          SliverList(delegate: SliverChildBuilderDelegate(
-              (c,i) => ListTile(
-                leading: IconButton(
-                  iconSize: 20.0,
-                    icon: Icon(
-                      FontAwesomeIcons.envelopeOpenText, color: Colors.purpleAccent,),
-                    onPressed: null,
-                ),
-                title: Text("Some Walking!"),
-                dense: true,
-                subtitle: Text("$i My phone just realized and some software"),
-              ), childCount: 30
-          ))
+          StreamBuilder<List<MPMessage>>(
+            stream: smsRetrieverBloc.queryResults,
+            builder: (context, snapshot) {
+              switch(snapshot.connectionState){
+                case ConnectionState.active:
+                case ConnectionState.done:
+
+                return snapshot.data?.length > 0 ?
+                SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                        (c,i) => HistoryTile(snapshot.data[i]), childCount: snapshot.data.length
+                )) : SliverToBoxAdapter(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Text("No Results Found!!"),
+                  ),
+                );
+                default:
+                  return SliverToBoxAdapter(
+                    child: Container(
+                      height: 72.0,
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+              }
+            }
+          )
         ],
       ),
     );
@@ -159,9 +183,14 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
   final TextEditingController editingController;
   final FocusNode focusNode;
   final Function clearCallBack;
+  final SmsRetrieverBloc smsRetrieverBloc;
 
-  SearchActivityDelegate(
-      {this.editingController, this.focusNode, this.clearCallBack});
+  SearchActivityDelegate({
+    this.editingController,
+    this.focusNode,
+    this.clearCallBack,
+    this.smsRetrieverBloc
+  });
 
   @override
   Widget build(
@@ -173,7 +202,8 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
           child: TextField(
-            onTap: () {},
+            //onTap: () {},
+            onChanged: smsRetrieverBloc.queryMessages.add,
             maxLines: 1,
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -183,10 +213,11 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
                   iconSize: 12.0,
                   icon: Icon(FontAwesomeIcons.backspace),
                   onPressed: () {
-                    if (focusNode.hasFocus) {
-                      focusNode.unfocus();
-                      this.clearCallBack();
-                    }
+                    focusNode.requestFocus();
+                    Future.delayed(Duration(milliseconds: 50), () {
+                      editingController.clear();
+                      FocusScope.of(context).requestFocus(focusNode);
+                    });
                   }),
             ),
             focusNode: focusNode,
@@ -351,7 +382,7 @@ class BackdropState extends State<Backdrop>
     _controller = AnimationController(
       duration: Duration(milliseconds: 300),
       // value of 0 hides the panel; value of 1 fully shows the panel
-      value: (widget.panelVisible?.value ?? true) ? 1.0 : 0.0,
+      value: (widget.panelVisible?.value ?? false) ? 1.0 : 0.0,
       vsync: this,
     );
 
