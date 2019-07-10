@@ -30,8 +30,7 @@ class QuickStats extends StatefulWidget {
 
 class _QuickStatsState extends State<QuickStats> {
   bool searchStatCrossfade = false;
-  final TextEditingController _controller =
-      TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
   String formatAsCurrency(double value) {

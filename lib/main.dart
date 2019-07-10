@@ -2,6 +2,7 @@ import 'package:bezier_chart/bezier_chart.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:billie/blocs/sms_retriever_bloc.dart';
+import 'package:scoped_model/scoped_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
@@ -13,6 +14,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 import 'models/MPesaMessage.dart';
+import 'package:billie/widgets/custom_backdrop.dart';
 
 void main() => runApp(MyApp());
 
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Billie',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
           // This is the theme of your application.
           //
@@ -47,26 +50,24 @@ class BillieWallet extends StatefulWidget {
   _BillieWalletState createState() => _BillieWalletState();
 }
 
-enum WhyFarther { harder, smarter, selfStarter, tradingCharter }
-
 class _BillieWalletState extends State<BillieWallet>
     with TickerProviderStateMixin {
-  String _batteryLevel = "Unknown";
 
   SmsRetrieverBloc smsRetrieverBloc;
-  bool _isVisible;
   ScrollController _scrollController;
   Function listener;
+  PanelModel panelModel;
 
   List<Widget> slivers;
+  GlobalKey<BackdropState> _globalBackdropKey = GlobalKey(debugLabel: "BackDropState");
 
   @override
   void initState() {
     super.initState();
     slivers = List<Widget>();
-    _isVisible = false;
     _scrollController = ScrollController();
-    listener = () {
+    //panelModel = PanelModel(FrontPanels.searchPanel);
+    /*listener = () {
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
         if (_isVisible == true) {
@@ -92,7 +93,7 @@ class _BillieWalletState extends State<BillieWallet>
           }
         }
       }
-    };
+    };*/
     //_scrollController.addListener(listener);
   }
 
@@ -139,28 +140,6 @@ class _BillieWalletState extends State<BillieWallet>
               });
         }),
         actions: <Widget>[
-          /*Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-            child: DropdownButton(
-              elevation: 2,
-              value: 'Mens',
-              items: <String>['Mens', 'Womans'].map((String value) {
-                return new DropdownMenuItem<String>(
-                  value: value,
-                  child: new Text(value),
-                );
-              }).toList(),
-              onChanged: (e) {
-                print(e);
-              },
-              underline: Container(),
-              icon: Icon(
-                FontAwesomeIcons.wallet,
-                color: Colors.black,
-              ),
-              iconSize: 16.0,
-            ),
-          ),*/
           IconButton(
               iconSize: 16.0,
               icon: Icon(
@@ -169,23 +148,19 @@ class _BillieWalletState extends State<BillieWallet>
               ),
               onPressed: () {
                 //TODO: Use stack with some sort of handler for wallet functions
+                _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
               }),
         ],
       ),
     );
 
     slivers.add(
-      SliverPersistentHeader(
-          pinned: true, floating: false, delegate: WalletStatistic()),
+      SliverPersistentHeader(pinned: true, floating: false, delegate: WalletStatistic()),
     );
     slivers.add(
-      SliverToBoxAdapter(
-        child: Container(height: 200, child: ChartWrapper()),
-      ),
+      SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),
     );
-    slivers.add(SliverToBoxAdapter(
-      child: Divider(),
-    ));
+    slivers.add(SliverToBoxAdapter(child: Divider(),));
     slivers.add(SliverToBoxAdapter(
       child: ListTile(
         dense: true,
@@ -203,29 +178,26 @@ class _BillieWalletState extends State<BillieWallet>
         ),
       ),
     ));
-    //slivers.add(HistoryBox());
 
     Widget _createScrollViewArea() {
-      return MPMessagesProvider(
-        child: Builder(
-          builder: (innerContext) {
-            smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
-            return Material(
-              color: Colors.white,
-              child: StreamBuilder<Object>(
-                  stream: smsRetrieverBloc.historyChunks,
-                  builder: (context, AsyncSnapshot<Object> snapshot) {
-                    return CustomScrollView(
-                      controller: _scrollController,
-                      physics: BouncingScrollPhysics(),
-                      key: PageStorageKey<String>("csrv"),
-                      slivers: slivers
-                        ..addAll(SliverSectionBuilder().create(snapshot)),
-                    );
-                  }),
-            );
-          },
-        ),
+      return Builder(
+        builder: (innerContext) {
+          smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
+          return Material(
+            color: Colors.white,
+            child: StreamBuilder<Object>(
+                stream: smsRetrieverBloc.historyChunks,
+                builder: (context, AsyncSnapshot<Object> snapshot) {
+                  return CustomScrollView(
+                    controller: _scrollController,
+                    physics: BouncingScrollPhysics(),
+                    key: PageStorageKey<String>("csrv"),
+                    slivers: slivers
+                      ..addAll(SliverSectionBuilder().create(snapshot)),
+                  );
+                }),
+          );
+        },
       );
     }
 
@@ -247,16 +219,8 @@ class _BillieWalletState extends State<BillieWallet>
             children: <Widget>[
               DrawerHeader(
                   decoration: BoxDecoration(
-                    // backgroundBlendMode: BlendMode.darken,
                     image: DecorationImage(
                         fit: BoxFit.cover,
-                        /*colorFilter: ColorFilter.matrix([
-                            0, 1.0,   0,  0, 0,
-                            0, 1.0,   0,  0, 0,
-                            0, 0.6,  1.0, 0, 0,
-                            0, 0,    0, 1.0, 0,
-                          ]),*/
-                        // colorFilter: ColorFilter.mode(Colors.black38, BlendMode.darken),
                         image: NetworkImage(
                           "https://source.unsplash.com/640x480/?money",
                         )),
@@ -272,7 +236,7 @@ class _BillieWalletState extends State<BillieWallet>
                               child: FadeInImage.memoryNetwork(
                                   placeholder: kTransparentImage,
                                   image:
-                                      "https://randomuser.me/api/portraits/men/${math.Random().nextInt(99)}.jpg")),
+                                      "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
                         )),
                   ])),
               ListTile(
@@ -280,6 +244,7 @@ class _BillieWalletState extends State<BillieWallet>
                 leading: IconButton(
                   icon: Icon(FontAwesomeIcons.userCircle),
                   iconSize: 16.0,
+                  color: Colors.purpleAccent,
                   onPressed: () {},
                 ),
                 //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
@@ -298,6 +263,7 @@ class _BillieWalletState extends State<BillieWallet>
                 leading: IconButton(
                   icon: Icon(FontAwesomeIcons.cloudUploadAlt),
                   iconSize: 16.0,
+                  color: Colors.purpleAccent,
                   onPressed: () {},
                 ),
                 //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
@@ -314,8 +280,28 @@ class _BillieWalletState extends State<BillieWallet>
               ListTile(
                 dense: true,
                 leading: IconButton(
+                  icon: Icon(FontAwesomeIcons.cloudDownloadAlt),
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  onPressed: () {},
+                ),
+                //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+                title: Text(
+                  'Restore',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text("Restore from previous backup"),
+                onTap: () {
+                  // Update the state of the app.
+                  // ...
+                },
+              ),
+              ListTile(
+                dense: true,
+                leading: IconButton(
                   icon: Icon(FontAwesomeIcons.toolbox),
                   iconSize: 16.0,
+                  color: Colors.purpleAccent,
                   onPressed: () {},
                 ),
                 //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
@@ -333,7 +319,16 @@ class _BillieWalletState extends State<BillieWallet>
           ),
         ),
         //color: Colors.purpleAccent,
-        body: SafeArea(child: Scrollbar(child: _createScrollViewArea())));
+        body: SafeArea(
+            child: MPMessagesProvider(
+          child: Backdrop(
+              key: _globalBackdropKey,
+              frontLayer: SearchPanel(),
+              frontHeaderVisibleClosed: false,
+              frontHeaderHeight: 35.0,
+              frontPanelOpenHeight: 200.0,
+              backLayer: Scrollbar(child: _createScrollViewArea())),
+        )));
     //);
   }
 }
