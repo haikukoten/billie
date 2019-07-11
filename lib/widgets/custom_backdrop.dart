@@ -3,7 +3,9 @@ import 'dart:ui';
 import 'package:billie/blocs/sms_retriever_bloc.dart';
 import 'package:billie/models/MPesaMessage.dart';
 import 'package:billie/providers/MPMessagesProvider.dart';
+import 'package:billie/proxy/contact_service_proxy.dart';
 import 'package:billie/widgets/history_tile.dart';
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -12,6 +14,25 @@ import 'dart:math' as math;
 import 'package:transparent_image/transparent_image.dart';
 
 enum FrontPanels { searchPanel, infoPanel }
+
+
+class MessageViewModel extends Model{
+
+  bool _useCondensedModel;
+
+  MessageViewModel(this._useCondensedModel);
+
+  bool get activeModelType => _useCondensedModel;
+
+
+  void activate(bool model) {
+    if(model != _useCondensedModel){
+      _useCondensedModel = model;
+      notifyListeners();
+    }
+  }
+
+}
 
 ///Model to track which panel will be rendered onto the top of the stack
 class PanelModel extends Model {
@@ -81,102 +102,187 @@ class _SearchActivityState extends State<SearchActivity> {
     smsRetrieverBloc  = MPMessagesProvider.smsBlocOf(context);
 
     return Scrollbar(
-      child: CustomScrollView(
-        physics: BouncingScrollPhysics(),
-        slivers: <Widget>[
-          SliverPersistentHeader(
-            floating: true,
-              delegate: SearchActivityDelegate(
-                  editingController: controller,
-                  focusNode: focusNode,
-                  smsRetrieverBloc: smsRetrieverBloc,
-                  clearCallBack: this.clearTextCallBack)),
-          SliverToBoxAdapter(
-            child: Container(
-              height: 24.0,
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text("CONTACT RESULTS", style: TextStyle(
-                fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
-              ),),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Container(
-              height: 72.0,
-              child: ListView(
-                physics: BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                children: List.generate(12, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        CircleAvatar(
-                          radius: 24.0,
-                          child: ClipOval(
-                            child: FadeInImage.memoryNetwork(
-                                placeholder: kTransparentImage,
-                                image:
-                                    "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg"),
-                          ),
-                        ),
-                        Text("User $index", style: TextStyle(
-                          fontSize: 12.0
-                        ),)
-                      ],
-                    ),
-                  );
-                })
-                  ..insert(0,
-                      Padding(padding: EdgeInsets.symmetric(horizontal: 16.0))),
+      child: ScopedModel(
+        model: MessageViewModel(true),
+        child: CustomScrollView(
+          physics: BouncingScrollPhysics(),
+          slivers: <Widget>[
+            SliverPersistentHeader(
+              floating: true,
+                delegate: SearchActivityDelegate(
+                    editingController: controller,
+                    focusNode: focusNode,
+                    smsRetrieverBloc: smsRetrieverBloc,
+                    clearCallBack: this.clearTextCallBack)),
+            SliverToBoxAdapter(
+              child: Container(
+                height: 24.0,
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text("CONTACT RESULTS", style: TextStyle(
+                  fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
+                ),),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Container(
-              height: 24.0,
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text("MESSAGE RESULTS", style: TextStyle(
-                  fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
-              ),),
-            ),
-          ),
-          StreamBuilder<List<MPMessage>>(
-            stream: smsRetrieverBloc.queryResults,
-            builder: (context, snapshot) {
-              switch(snapshot.connectionState){
-                case ConnectionState.active:
-                case ConnectionState.done:
+            SliverToBoxAdapter(
+              child: Container(
+                height: 72.0,
+                child: StreamBuilder<Iterable<Contact>>(
+                  stream: smsRetrieverBloc.filterContacts,
+                  builder: (context, snapshot) {
+                    switch (snapshot.connectionState){
+                      case ConnectionState.active:
+                      case ConnectionState.done:
 
-                return snapshot.data?.length > 0 ?
-                SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                        (c,i) => HistoryTile(snapshot.data[i]), childCount: snapshot.data.length
-                )) : SliverToBoxAdapter(
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Text("No Results Found!!"),
-                  ),
-                );
-                default:
-                  return SliverToBoxAdapter(
+                      List<Contact> data =  snapshot.data.take(10).toList() ?? [];
+
+                      return   data.length > 0 ?
+                      ListView.builder(itemBuilder: (_,i){
+                        return  Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              FutureBuilder<Iterable<Contact>>(
+                                future: ContactServiceProxy.getInstance().searchContact(data[i].displayName),
+                                builder: (context, snapshot) {
+                                  switch(snapshot.connectionState){
+                                    case ConnectionState.done:
+                                    case ConnectionState.active:
+                                      //print("${data[i].displayName}: ${snapshot.data.first.avatar.isEmpty}");
+                                    return (snapshot.hasData && snapshot.data.length > 0) ? InkWell(
+                                      child: CircleAvatar(
+                                        radius: 24.0,
+                                        child: ClipOval(
+                                          child: snapshot.data.first.avatar.isEmpty
+                                              ? Text(data[i].displayName.substring(0,1))
+                                              : Image.memory(snapshot.data.first.avatar),
+                                        ),
+                                      ),
+                                      onTap: (){
+                                        String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
+                                        smsRetrieverBloc.queryMessages.add(phoneNo);
+                                        controller.text = phoneNo;
+                                      },
+                                    ): InkWell(
+                                      child: CircleAvatar(
+                                        radius: 24.0,
+                                        child: ClipOval(
+                                          child:Text(data[i].displayName.substring(0,1)),
+                                        ),
+                                      ),
+                                      onTap: (){
+                                        String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
+                                        smsRetrieverBloc.queryMessages.add(phoneNo);
+                                        controller.text = phoneNo;
+                                      },
+                                    );
+                                    break;
+                                    default:
+                                      return InkWell(
+                                        child: CircleAvatar(
+                                          radius: 24.0,
+                                          child: ClipOval(
+                                            child:Text(data[i].displayName.substring(0,1)),
+                                          ),
+                                        ),
+                                        onTap: (){
+                                          String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
+                                          smsRetrieverBloc.queryMessages.add(phoneNo);
+                                          controller.text = phoneNo;
+                                        },
+                                      );
+                                  }
+                                }
+                              ),
+                              Text(data[i].displayName, style: TextStyle(
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.bold
+                              ),)
+                            ],
+                          ),
+                        );
+                      },physics: BouncingScrollPhysics(),
+                        scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(
+                          horizontal: 16.0
+                        ), itemCount: snapshot.data.length,) : Center(
+                        child: Text("No Contact found!"),
+                      );
+                      break;
+                      default:
+                        return Center(
+                          child: Text("Results not available"),
+                        );
+                        break;
+                    }
+                  }
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                height: 24.0,
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text("MESSAGE RESULTS", style: TextStyle(
+                    fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
+                ),),
+              ),
+            ),
+            StreamBuilder<List<MPMessage>>(
+              stream: smsRetrieverBloc.queryResults,
+              builder: (context, snapshot) {
+                switch(snapshot.connectionState){
+                  case ConnectionState.active:
+                  case ConnectionState.done:
+                    //TODO: Add Style of display switchers!
+                  return snapshot.data?.length > 0 ?
+                  SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                          (c,i) =>
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  ScopedModelDescendant<MessageViewModel>(
+                                      builder: (_, __, model) =>
+                                          AnimatedCrossFade(
+                                              firstChild: SearchMessageTile(snapshot.data[i]),
+                                              secondChild: HistoryTile(snapshot.data[i]),
+                                              crossFadeState: model.activeModelType ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                                              duration: Duration(milliseconds: 200))
+                                  ),
+                                  Divider()
+                                ],
+                              )
+
+                          , childCount: snapshot.data.length,
+                  )) : SliverToBoxAdapter(
                     child: Container(
-                      height: 72.0,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      alignment: Alignment.center,
+                      child: Text("No Results Found!!"),
                     ),
                   );
+                  default:
+                    return SliverToBoxAdapter(
+                      child: Container(
+                        height: 72.0,
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    );
+                }
               }
-            }
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
+}
+
+enum Commands {
+  toggleViewModel
 }
 
 class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
@@ -201,27 +307,56 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
       child: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
-          child: TextField(
-            //onTap: () {},
-            onChanged: smsRetrieverBloc.queryMessages.add,
-            maxLines: 1,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-              hintText: "Search Transactions",
-              suffix: IconButton(
-                  iconSize: 12.0,
-                  icon: Icon(FontAwesomeIcons.backspace),
-                  onPressed: () {
-                    focusNode.requestFocus();
-                    Future.delayed(Duration(milliseconds: 50), () {
-                      editingController.clear();
-                      FocusScope.of(context).requestFocus(focusNode);
-                    });
-                  }),
-            ),
-            focusNode: focusNode,
-            controller: editingController,
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                  //onTap: () {},
+                  onChanged: smsRetrieverBloc.queryMessages.add,
+                  maxLines: 1,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+                    hintText: "Search Transactions",
+                    prefixIcon: Icon(FontAwesomeIcons.searchDollar, size: 12.0,color: Colors.purpleAccent,),
+                    suffix: IconButton(
+                        iconSize: 12.0,
+                        icon: Icon(FontAwesomeIcons.backspace),
+                        onPressed: () {
+                          focusNode.requestFocus();
+                          Future.delayed(Duration(milliseconds: 50), () {
+                            editingController.clear();
+                            FocusScope.of(context).requestFocus(focusNode);
+                          });
+                        }),
+                  ),
+                  focusNode: focusNode,
+                  controller: editingController,
+                ),
+              ),
+              ScopedModelDescendant<MessageViewModel>(
+                builder: (_, __, model) => PopupMenuButton<Commands>(
+                  onSelected: (Commands result) {
+                    switch (result) {
+                      case Commands.toggleViewModel:
+                        model.activate(!model.activeModelType);
+                        break;
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<Commands>>[
+                    CheckedPopupMenuItem<Commands>(
+                      checked: model.activeModelType,
+                      value: Commands.toggleViewModel,
+                      child: const Text('Condensed', style: TextStyle(
+                        fontSize: 14.0
+                      ),),
+                    ),
+                    //const PopupMenuDivider(),
+                    // ...other items listed here
+                  ],
+                ),
+              )
+            ],
           ),
         ),
       ),
@@ -322,9 +457,9 @@ class _BackdropPanel extends StatelessWidget {
             ),
 
             ///Simple Divider
-            Divider(
+            /*Divider(
               height: 1.0,
-            ),
+            ),*/
 
             ///Child goes here!
             Expanded(

@@ -2,6 +2,34 @@ import 'package:billie/models/MPesaMessage.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
+
+class SearchMessageTile extends StatelessWidget{
+  final MPMessage message;
+
+  SearchMessageTile(this.message);
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return ListTile(
+      dense: true,
+      leading: IconButton(
+        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          iconSize: 20.0,
+          color: Colors.purpleAccent,
+          icon: Icon(
+        FontAwesomeIcons.envelopeOpenText
+      ), onPressed: (){},
+      ),
+      title: Text(message.bodyString, maxLines: 2, overflow: TextOverflow.ellipsis,),
+      subtitle: Text(timeago.format(message.txDate), maxLines: 1, overflow: TextOverflow.ellipsis,),
+    );
+  }
+
+
+}
 
 class HistoryTile extends StatelessWidget {
   final MPMessage message;

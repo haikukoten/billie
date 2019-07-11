@@ -37,7 +37,8 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.blue,
-          fontFamily: "Raleway"),
+          fontFamily: "Raleway"
+      ),
       home: BillieWallet(),
     );
   }
@@ -318,7 +319,7 @@ class _BillieWalletState extends State<BillieWallet>
               frontHeader: Center(
                 child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
               ),
-              frontPanelOpenHeight: 200.0,
+              frontPanelOpenHeight: 72.0,
               backLayer: Scrollbar(child: _createScrollViewArea())),
         )));
     //);
