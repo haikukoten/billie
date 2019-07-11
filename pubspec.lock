@@ -2,7 +2,7 @@
 # See https://dart.dev/tools/pub/glossary#lockfile
 packages:
   async:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: async
       url: "https://pub.dartlang.org"
@@ -36,6 +36,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.14.11"
+  contacts_service:
+    dependency: "direct main"
+    description:
+      name: contacts_service
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.8"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -48,12 +55,19 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_backdrop:
+    dependency: "direct main"
+    description:
+      name: flutter_backdrop
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.3"
   flutter_sticky_header:
     dependency: "direct main"
     description:
       path: "."
       ref: master
-      resolved-ref: b2f5cd11d73bcf9c661333f65d36b75e80406112
+      resolved-ref: "66735426094fcd32c7b43ef767e45f4cc6d0ff67"
       url: "git://github.com/letsar/flutter_sticky_header.git"
     source: git
     version: "0.4.0"
@@ -103,7 +117,7 @@ packages:
       name: pedantic
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.7.0"
+    version: "1.8.0+1"
   quiver:
     dependency: transitive
     description:
@@ -111,6 +125,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.3"
+  rxdart:
+    dependency: "direct main"
+    description:
+      name: rxdart
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.22.0"
+  scoped_model:
+    dependency: "direct main"
+    description:
+      name: scoped_model
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
   sky_engine:
     dependency: transitive
     description: flutter

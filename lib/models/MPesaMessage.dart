@@ -23,9 +23,10 @@ class MPMessage {
   final double txAmount;
   final double txBal;
   final DateTime txDate;
+  final String bodyString;
 
   MPMessage(this.participant, this.txCode, this.mpMessageType, this.txFees,
-      this.txAmount, this.txBal, this.txDate);
+      this.txAmount, this.txBal, this.txDate, this.bodyString);
 
   static MPMessage fromBody(SillyMPMessageParser parser, String body, String timeStamp) {
     DateTime t =  DateTime.fromMillisecondsSinceEpoch(
@@ -76,7 +77,7 @@ class SillyMPMessageParser {
         }
       }
     }
-    return MPMessage(participant, txCode, txType, transactionCost, amount, balance, date);
+    return MPMessage(participant, txCode, txType, transactionCost, amount, balance, date, bodyString);
   }
 
   MPMessageType getTransactionType(String message) {

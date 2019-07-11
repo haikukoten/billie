@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:billie/models/MPesaMessage.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:contacts_service/contacts_service.dart';
+import 'package:billie/proxy/contact_service_proxy.dart';
+import 'package:async/async.dart';
 
 ///PROTIP:
 /// Use  [StreamController] if you need access to a [Sink], can be refactored later
@@ -11,6 +15,7 @@ import 'package:billie/proxy/sms_service_proxy.dart';
 
 class SmsRetrieverBloc {
   final SmsServiceProxy smsServiceProxy;
+  final ContactServiceProxy contactServiceProxy;
 
   StreamController<List<MPMessage>> _mpesaSmsController = StreamController
       .broadcast(
@@ -28,8 +33,7 @@ class SmsRetrieverBloc {
   StreamController<Map<String,double>> _statsController = StreamController
     .broadcast(
       onListen: (){print("Stats Listener");},
-      onCancel: (){print("Stats listener Cancelled");
-      },
+      onCancel: (){print("Stats listener Cancelled");},
   );
 
   StreamController<Map<DateTime,List<MPMessage>>> _historyChunkController = StreamController
@@ -39,15 +43,43 @@ class SmsRetrieverBloc {
     },
   );
 
+  ReplaySubject<String>   _queryMessages =  ReplaySubject<String>(maxSize: 5);
+  //Stream<List<MPMessage>> _queryResults  =  Stream.empty(); //Track query results
+  //Stream<String>          _queryLog      =  Stream.empty(); //Track latest query
+
   Stream<List<MPMessage>> get mpesaSmsStream => _mpesaSmsController.stream;
   Stream<List<DataPoint<DateTime>>> get datapointsStream => _datapointController.stream;
   Stream<Map<String,double>> get statsStream => _statsController.stream;
   Stream<Map<DateTime,List<MPMessage>>> get historyChunks => _historyChunkController.stream;
+
+
+  Sink<String> get queryMessages => _queryMessages;
+  //Stream<String> get queryLog => _queryLog;
+
+  ///TODO: Switch to iterator model to handle larger workloads better
+  Stream<List<MPMessage>> get queryResults  => Observable.combineLatest2(
+      _queryMessages.debounceTime(Duration(milliseconds: 600)), mpesaSmsStream,
+          (String eventString, List messages){
+    return messages.where((message){
+      return message.bodyString.toLowerCase().contains(eventString.toLowerCase(),);
+    }).take(10).toList();
+  });
+
+  Stream<Iterable<Contact>> get allContacts => ContactServiceProxy.getInstance().getContacts().asStream();
+
+  Stream<Iterable<Contact>> get filterContacts => Observable.combineLatest2(
+      _queryMessages.debounceTime(Duration(milliseconds: 600)), allContacts,
+          (String filter, Iterable<Contact> contacts) {
+            return contacts.where((contact) =>
+                contact.phones.any((phone) => phone.value.contains(filter)) ||
+                contact.displayName.contains(filter)
+            );
+          });
+
   StreamSubscription mpesaStreamSub;
 
 
-
-  SmsRetrieverBloc(this.smsServiceProxy){
+  SmsRetrieverBloc(this.smsServiceProxy, this.contactServiceProxy){
     smsServiceProxy.getSmsMessages().then((List data){
       _mpesaSmsController.sink.add(data);
     });
@@ -56,7 +88,6 @@ class SmsRetrieverBloc {
       _datapointController.addStream(smsServiceProxy.getDataPoints(e).asStream());
       _statsController.addStream(smsServiceProxy.getReducedSums(e).asStream());
       _historyChunkController.addStream(smsServiceProxy.chunkByDate(e).asStream());
-      //_mpesaSmsController.close();
     });
 
   }
@@ -67,5 +98,6 @@ class SmsRetrieverBloc {
     _datapointController.close();
     _statsController.close();
     _historyChunkController.close();
+    _queryMessages.close();
   }
 }
