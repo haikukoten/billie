@@ -205,7 +205,7 @@ class _SearchActivityState extends State<SearchActivity> {
                       },physics: BouncingScrollPhysics(),
                         scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(
                           horizontal: 16.0
-                        ), itemCount: snapshot.data.length,) : Center(
+                        ), itemCount: data.length,) : Center(
                         child: Text("No Contact found!"),
                       );
                       break;
