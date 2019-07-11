@@ -1,4 +1,5 @@
 import 'package:billie/blocs/sms_retriever_bloc.dart';
+import 'package:billie/proxy/contact_service_proxy.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +11,7 @@ class MPMessagesProvider extends InheritedWidget {
 
   MPMessagesProvider({Key key, Widget child, SmsRetrieverBloc sBloc})
       : this.smsRetrieverBloc =
-            sBloc ?? SmsRetrieverBloc(SmsServiceProxy.getInstance()),
+            sBloc ?? SmsRetrieverBloc(SmsServiceProxy.getInstance(), ContactServiceProxy.getInstance()),
         super(key: key, child: child);
 
   //Prototyped - avoid using this call due to performance limitations within deeply nested widgets

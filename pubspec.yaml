@@ -30,6 +30,8 @@ dependencies:
   rxdart: ^0.22.0
   flutter_backdrop: ^1.0.3
   scoped_model: ^1.0.1
+  contacts_service: ^0.2.8
+  async: ^2.2.0
   #date_utils: ^0.0.1
 
   # The following adds the Cupertino Icons font to your application.

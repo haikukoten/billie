@@ -15,6 +15,12 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 
+
+
+
+
+
+
 class MainActivity: FlutterActivity() {
   private val CHANNEL = "dev.billie.billie/sms"
 
@@ -34,7 +40,6 @@ class MainActivity: FlutterActivity() {
           val messages = _getAllSms(this)
           result.success(messages)
       } else {
-          print(call.method)
           result.notImplemented()
       }
     }
@@ -56,7 +61,7 @@ class MainActivity: FlutterActivity() {
 
         val cr = context.contentResolver
         val c = cr.query(Telephony.Sms.CONTENT_URI, mProjection, mSelection, null, "${Telephony.Sms.DATE} DESC")
-        var totalSMS = 0
+        val totalSMS: Int
         if (c != null) {
             //print("Count = ${c.count}")
             totalSMS = c.count
