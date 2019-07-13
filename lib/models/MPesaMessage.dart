@@ -101,7 +101,7 @@ class SillyMPMessageParser {
       RegExp matcher =
           RegExp("from(.*)on [1-9]", caseSensitive: false, multiLine: false);
       if (matcher.hasMatch(body)) {
-        return matcher.firstMatch(body).group(1);
+        return matcher.firstMatch(body).group(1).trim();
       } else {
         return "EMPTY";
       }
@@ -109,7 +109,7 @@ class SillyMPMessageParser {
       RegExp matcher =
           RegExp("from(.*)new m-pesa", caseSensitive: false, multiLine: false);
       if (matcher.hasMatch(body)) {
-        return matcher.firstMatch(body).group(1);
+        return matcher.firstMatch(body).group(1).trim();
       } else {
         return "EMPTY";
       }
@@ -118,7 +118,7 @@ class SillyMPMessageParser {
       RegExp matcher =
           RegExp("to(.*)on [1-9]", caseSensitive: false, multiLine: false);
       if (matcher.hasMatch(body)) {
-        return matcher.firstMatch(body).group(1);
+        return matcher.firstMatch(body).group(1).trim();
       } else {
         return "EMPTY";
       }

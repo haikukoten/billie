@@ -62,6 +62,7 @@ class _BillieWalletState extends State<BillieWallet>
 
   List<Widget> slivers;
   GlobalKey<BackdropState> _globalBackdropKey = GlobalKey(debugLabel: "BackDropState");
+  ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _BillieWalletState extends State<BillieWallet>
     slivers = List<Widget>();
     _scrollController = ScrollController();
     panelModel = PanelModel(FrontPanels.searchPanel);
+    //panelVisible.value = true;
   }
 
   @override
@@ -289,39 +291,68 @@ class _BillieWalletState extends State<BillieWallet>
               // ...
             },
           ),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.connectdevelop),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Feedback',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Contact developer"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
         ],
       );
     }
 
-    return Scaffold(
-        backgroundColor: Colors.white,
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-        /*floatingActionButton: FloatingActionButton(
-            child: Icon(FontAwesomeIcons.commentsDollar,size: 16.0,),
-            backgroundColor: Colors.purpleAccent,
-            onPressed: (){
-              _scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
-            }),*/
-        drawer: Drawer(
-          child: renderDrawerListItems()
-        ),
-        //color: Colors.purpleAccent,
-        body: SafeArea(
-            child: MPMessagesProvider(
-          child: Backdrop(
-              key: _globalBackdropKey,
-              frontLayer: ScopedModel<PanelModel>(
-                model: panelModel,
-                child: SearchPanel(),
-              ),
-              frontHeaderVisibleClosed: false,
-              frontHeaderHeight: 35.0,
-              frontHeader: Center(
-                child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
-              ),
-              frontPanelOpenHeight: 72.0,
-              backLayer: Scrollbar(child: _createScrollViewArea())),
-        )));
+    return WillPopScope(
+      onWillPop: () async {
+        if(panelVisible.value){
+          _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+          return  false;
+        } else
+          return true;
+      },
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+          floatingActionButton: FloatingActionButton(
+              child: Icon(FontAwesomeIcons.handHoldingUsd,size: 16.0,),
+              backgroundColor: Colors.purpleAccent,
+              onPressed: (){
+                //_scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
+              }),
+          drawer: Drawer(
+            child: renderDrawerListItems()
+          ),
+          //color: Colors.purpleAccent,
+          body: SafeArea(
+              child: MPMessagesProvider(
+            child: Backdrop(
+                key: _globalBackdropKey,
+                frontLayer: ScopedModel<PanelModel>(
+                  model: panelModel,
+                  child: SearchPanel(),
+                ),
+                frontHeaderVisibleClosed: false,
+                frontHeaderHeight: 35.0,
+                frontHeader: Center(
+                  child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
+                ),
+                frontPanelOpenHeight: 72.0,
+                panelVisible: panelVisible,
+                backLayer: Scrollbar(child: _createScrollViewArea())),
+          ))),
+    );
     //);
   }
 }
