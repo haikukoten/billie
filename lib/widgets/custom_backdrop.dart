@@ -650,7 +650,7 @@ class InfoPanel extends StatelessWidget {
               title: Text("Message", style: TextStyle(
                   fontWeight: FontWeight.bold
               ),),
-              subtitle: Text(message.bodyString),
+              subtitle: Text(message.bodyString, maxLines: 3, overflow: TextOverflow.ellipsis),
             ),
             Padding(padding: EdgeInsets.symmetric(vertical: 8.0))
           ],

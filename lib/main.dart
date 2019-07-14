@@ -346,7 +346,7 @@ class _BillieWalletState extends State<BillieWallet>
                 frontHeaderVisibleClosed: false,
                 frontHeaderHeight: 35.0,
                 frontHeader: Center(
-                  child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
+                  child: Icon(FontAwesomeIcons.gripHorizontal),
                 ),
                 frontPanelOpenHeight: 72.0,
                 panelVisible: panelVisible,
