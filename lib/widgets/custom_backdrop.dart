@@ -575,7 +575,7 @@ class InfoPanel extends StatelessWidget {
               ),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                 color: Colors.purpleAccent,
@@ -588,7 +588,7 @@ class InfoPanel extends StatelessWidget {
               subtitle: Text(message.txCode.toUpperCase()),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                   iconSize: 16.0,
@@ -601,7 +601,7 @@ class InfoPanel extends StatelessWidget {
               subtitle: Text(formatAsCurrency(message.txAmount)),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                   iconSize: 16.0,
@@ -614,7 +614,7 @@ class InfoPanel extends StatelessWidget {
               subtitle: Text(formatAsCurrency(message.txFees)),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                   iconSize: 16.0,
@@ -627,7 +627,7 @@ class InfoPanel extends StatelessWidget {
               subtitle: Text(Timeago.format(message.txDate)),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                   iconSize: 16.0,
@@ -640,7 +640,7 @@ class InfoPanel extends StatelessWidget {
               subtitle: Text(formatAsCurrency(message.txBal)),
             ),
             ListTile(
-              dense: true,
+              //dense: true,
               onTap: () {},
               leading: IconButton(
                   iconSize: 16.0,

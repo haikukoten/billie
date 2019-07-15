@@ -10,11 +10,9 @@ import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
 import 'package:billie/widgets/quick_stats.dart';
 import 'dart:math' as math;
-import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import 'models/MPesaMessage.dart';
 import 'package:billie/widgets/custom_backdrop.dart';
 
 void main() => runApp(MyApp());
@@ -37,7 +35,7 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.blue,
-          fontFamily: "Raleway"
+          fontFamily: "NeueHaasGroteskTXPro"
       ),
       home: BillieWallet(),
     );
@@ -490,6 +488,7 @@ class SliverSectionBuilder {
                                     : '${timeago.format(dateKey).toUpperCase()} on ${months[(dateKey.month - 1)]} ${dateKey.day ?? "Unknown"}',
                                 style: TextStyle(
                                     fontSize: 12.0,
+                                    fontFamily: "Raleway",
                                     fontWeight: FontWeight.bold,
                                     color: state.isPinned
                                         ? Colors.purple
@@ -520,11 +519,10 @@ class SliverSectionBuilder {
 }
 
 class ChartWrapper extends StatelessWidget {
-  SmsRetrieverBloc smsRetrieverBloc;
 
   @override
   Widget build(BuildContext context) {
-    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
+    SmsRetrieverBloc smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return Center(
         child: Container(
             color: Colors.white,
@@ -541,7 +539,6 @@ class ChartWrapper extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 16.0),
                         child: BezierChart(
                           fromDate: data.last.xAxis,
-                          //TODO: Use a custom scale to better handle missing values
                           bezierChartScale: BezierChartScale.WEEKLY,
                           toDate: data.first.xAxis,
                           selectedDate: data.first.xAxis,

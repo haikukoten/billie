@@ -9,6 +9,7 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.provider.Telephony
+import android.support.v4.content.ContextCompat
 import android.widget.Toast
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
@@ -24,9 +25,18 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 class MainActivity: FlutterActivity() {
   private val CHANNEL = "dev.billie.billie/sms"
 
+
+    private  fun _startZipService(){
+        val intent: Intent =
+                Intent(this, Class.forName("dev.billie.billie.ZipService"))
+        intent.putExtra("inputExtra", "Foreground Service Example in Android")
+        ContextCompat.startForegroundService(this, intent)
+    }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     GeneratedPluginRegistrant.registerWith(this)
+      _startZipService()
     MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
 
       if (call.method == "getBatteryLevel") {
@@ -70,7 +80,7 @@ class MainActivity: FlutterActivity() {
                     //val smsDate = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
                     //val number = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
                     val body = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.BODY))
-                    var person = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                    //var person = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
                     //val sub = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.SUBJECT))
                     val date = c.getString(c.getColumnIndexOrThrow(Telephony.Sms.DATE))
                     // val dateFormat = Date(Long.valueOf(smsDate))
@@ -109,3 +119,4 @@ class MainActivity: FlutterActivity() {
     return batteryLevel
   }
 }
+
