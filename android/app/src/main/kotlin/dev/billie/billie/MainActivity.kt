@@ -1,9 +1,7 @@
 package dev.billie.billie
 
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.Activity
+import android.content.*
 import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -14,6 +12,10 @@ import android.widget.Toast
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
+
+
+
+
 
 
 
@@ -33,7 +35,39 @@ class MainActivity: FlutterActivity() {
         ContextCompat.startForegroundService(this, intent)
     }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
+    private val receiver = object : BroadcastReceiver() {
+
+        override fun onReceive(context: Context, intent: Intent) {
+            val bundle = intent.extras
+            if (bundle != null) {
+               // val string = bundle.getString(DownloadService.FILEPATH)
+                val resultCode = bundle.getInt(ZipService.RESULT)
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(this@MainActivity,
+                            "ZipService is Done ",
+                            Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Download failed",
+                            Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(receiver, IntentFilter(
+                ZipService.NOTIFICATION))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(receiver)
+    }
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     GeneratedPluginRegistrant.registerWith(this)
       _startZipService()

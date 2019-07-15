@@ -5,21 +5,72 @@ package dev.billie.billie
  * Created by Harry K on 7/15/19. <kituyiharry@gmail.com>
  */
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
-import android.content.Context
+import android.app.*
 import android.content.Intent
 import android.os.Build
-import android.os.Handler
-import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.widget.Toast
 
+class ZipService : IntentService("ZipService") {
 
+    private var result = Activity.RESULT_CANCELED
 
-class ZipService : Service() {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Toast.makeText(this, "ZipService Up", Toast.LENGTH_SHORT).show()
+        val input = intent?.getStringExtra("inputExtra")
+
+        createNotificationChannel()
+
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0)
+
+        val notification = NotificationCompat.Builder(this, "ZipService")
+                .setContentTitle("Foreground Service")
+                .setContentText(input)
+                .setSmallIcon(android.R.drawable.ic_menu_upload)
+                .setContentIntent(pendingIntent)
+                .build()
+
+        startForeground(1, notification)
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    // will be called asynchronously by Android
+    override fun onHandleIntent(intent: Intent?) {
+        Toast.makeText(this@ZipService, "HandleZipService", Toast.LENGTH_SHORT).show();
+        Thread.sleep(10000)
+        publishResults("PATH", Activity.RESULT_OK)
+    }
+
+    private fun publishResults(outputPath: String, result: Int) {
+        val intent = Intent(NOTIFICATION)
+        intent.putExtra(FILEPATH, outputPath)
+        intent.putExtra(RESULT, result)
+        sendBroadcast(intent)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceChannel = NotificationChannel(
+                    "ZipService",
+                    "Zip Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            )
+
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(serviceChannel)
+        }
+    }
+
+    companion object {
+        const val FILEPATH = "filepath"
+        const val RESULT = "result"
+        const val NOTIFICATION = "dev.billie.billie.ZipService"
+    }
+}
+
+/*class ZipService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Toast.makeText(this, "ZipService Up", Toast.LENGTH_SHORT).show()
@@ -75,4 +126,4 @@ class ZipService : Service() {
     companion object {
         val CHANNEL_ID = "ZipServiceChannel"
     }
-}
+}*/
