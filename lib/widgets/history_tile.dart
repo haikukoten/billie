@@ -4,31 +4,35 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-
-class SearchMessageTile extends StatelessWidget{
+class SearchMessageTile extends StatelessWidget {
   final MPMessage message;
 
   SearchMessageTile(this.message);
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return ListTile(
       dense: true,
+      //onTap: (){},
       leading: IconButton(
         padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-          iconSize: 20.0,
-          color: Colors.purpleAccent,
-          icon: Icon(
-        FontAwesomeIcons.envelopeOpenText
-      ), onPressed: (){},
+        iconSize: 20.0,
+        color: Colors.purpleAccent,
+        icon: Icon(FontAwesomeIcons.envelopeOpenText),
+        onPressed: () {},
       ),
-      title: Text(message.bodyString, maxLines: 2, overflow: TextOverflow.ellipsis,),
-      subtitle: Text(timeago.format(message.txDate), maxLines: 1, overflow: TextOverflow.ellipsis,),
+      title: Text(
+        message.bodyString,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        timeago.format(message.txDate),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
-
-
 }
 
 class HistoryTile extends StatelessWidget {
@@ -52,9 +56,6 @@ class HistoryTile extends StatelessWidget {
 
   //Creates a string with the decimal points as superscripts
   String formatAsCurrency(double value) {
-    //String num = value.toStringAsFixed(2);
-    //var s =
-    //   "${unicode_map[num.substring(num.length - 2, num.length - 1)]["sp"]}${unicode_map[num.substring(num.length - 1, num.length)]["sp"]}";
     return NumberFormat.compactCurrency(symbol: "\$").format(value);
   }
 
@@ -69,7 +70,9 @@ class HistoryTile extends StatelessWidget {
               icon: Icon(FontAwesomeIcons.moneyCheckAlt),
               onPressed: () {}),
           title: Text(
-              "${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
+              "${message.participant[0].toUpperCase()}${message.participant.substring(1)}",
+            maxLines: 1,overflow: TextOverflow.ellipsis,
+          ),
           dense: true,
           subtitle: Text(
             formatAsCurrency(message.txAmount),
@@ -106,7 +109,8 @@ class HistoryTile extends StatelessWidget {
               onPressed: () {}),
           dense: true,
           title: Text(
-              "${message.participant[1].toUpperCase()}${message.participant.substring(2)}"),
+              "${message.participant[0].toUpperCase()}${message.participant.substring(1)}",
+            maxLines: 1, overflow: TextOverflow.ellipsis,),
           subtitle: Text(
             "${formatAsCurrency(message.txAmount)} | Fees: ${formatAsCurrency(message.txFees)}",
           ),

@@ -32,5 +32,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- syncs -->
+        <service android:name=".ZipService" android:enabled="true"
+            android:exported="false"></service>
     </application>
 </manifest>
