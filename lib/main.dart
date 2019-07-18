@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.blue,
-          fontFamily: "NeueHaasGroteskTXPro"
+          fontFamily: "GoogleSans"
       ),
       home: BillieWallet(),
     );
@@ -102,7 +102,7 @@ class _BillieWalletState extends State<BillieWallet>
               color: Colors.black,
               fontWeight: FontWeight.bold,
               //letterSpacing: 1.0,
-              fontFamily: "DMSerifDisplay"),
+              fontFamily: "Raleway"),
         ),
         centerTitle: true,
         elevation: 0.0,

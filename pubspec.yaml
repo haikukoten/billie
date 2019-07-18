@@ -120,5 +120,22 @@ flutter:
          - asset:  assets/fonts/NeueHaasGroteskTX/NHaasGroteskTXPro-76BdIt.ttf
            style:  italic
            weight: 700
+     - family: GoogleSans
+       fonts:
+         - asset:  assets/fonts/GoogleSans/ProductSans-Regular.ttf
+           weight: 400
+         - asset:  assets/fonts/GoogleSans/ProductSans-Italic.ttf
+           style:  italic
+           weight: 400
+         - asset:  assets/fonts/GoogleSans/ProductSans-Bold.ttf
+           weight: 700
+         - asset:  assets/fonts/GoogleSans/ProductSans-BoldItalic.ttf
+           style:  italic
+           weight: 700
+         - asset:  assets/fonts/GoogleSans/ProductSans-Black.ttf
+           weight: 900
+         - asset:  assets/fonts/GoogleSans/ProductSans-BlackItalic.ttf
+           style:  italic
+           weight: 900
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

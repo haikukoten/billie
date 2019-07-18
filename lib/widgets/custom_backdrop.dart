@@ -252,17 +252,13 @@ class _SearchActivityState extends State<SearchActivity> {
                                                         String phoneNo = data[i]
                                                             .phones
                                                             .first
-                                                            .value;
-                                                        smsRetrieverBloc
-                                                            .queryMessages
-                                                            .add(phoneNo);
+                                                            .value
+                                                            .replaceAll(" ", "")
+                                                            .replaceAll("-", "")
+                                                            .trim();
+                                                        //smsRetrieverBloc.queryMessages.add(phoneNo);
                                                         controller.text =
-                                                            phoneNo
-                                                                .replaceAll(
-                                                                    " ", "")
-                                                                .replaceAll(
-                                                                    "-", "")
-                                                                .trim();
+                                                            phoneNo;
                                                       },
                                                     );
                                                 }
@@ -301,10 +297,11 @@ class _SearchActivityState extends State<SearchActivity> {
                           return Container(
                             height: 72.0,
                             alignment: Alignment.center,
-                            child: Text("Tap contact for specific results",textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.purpleAccent
-                            ),),
+                            child: Text(
+                              "Tap contact for specific results",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.purpleAccent),
+                            ),
                           );
                         default:
                           return Center(
@@ -558,33 +555,35 @@ class InfoPanel extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Center(
-                child: Icon(FontAwesomeIcons.userAlt, size: 24.0,)
-              ),
+                  child: Icon(
+                FontAwesomeIcons.userAlt,
+                size: 24.0,
+              )),
             ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
               child: Center(
-                child: Text(_titleFromMessage(message),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold
-                ),),
+                child: Text(
+                  _titleFromMessage(message),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             ListTile(
               //dense: true,
               onTap: () {},
               leading: IconButton(
-                color: Colors.purpleAccent,
-                iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  iconSize: 16.0,
                   icon: Icon(FontAwesomeIcons.fileInvoiceDollar),
                   onPressed: () {}),
-              title: Text("Transaction Code", style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),),
+              title: Text(
+                "Transaction Code",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(message.txCode.toUpperCase()),
             ),
             ListTile(
@@ -595,9 +594,10 @@ class InfoPanel extends StatelessWidget {
                   color: Colors.purpleAccent,
                   icon: Icon(FontAwesomeIcons.moneyBillWave),
                   onPressed: () {}),
-              title: Text("Amount", style: TextStyle(
-                  fontWeight: FontWeight.bold
-              ),),
+              title: Text(
+                "Amount",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(formatAsCurrency(message.txAmount)),
             ),
             ListTile(
@@ -608,9 +608,10 @@ class InfoPanel extends StatelessWidget {
                   color: Colors.purpleAccent,
                   icon: Icon(FontAwesomeIcons.funnelDollar),
                   onPressed: () {}),
-              title: Text("Transaction Fees", style: TextStyle(
-                  fontWeight: FontWeight.bold
-              ),),
+              title: Text(
+                "Transaction Fees",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(formatAsCurrency(message.txFees)),
             ),
             ListTile(
@@ -621,9 +622,10 @@ class InfoPanel extends StatelessWidget {
                   color: Colors.purpleAccent,
                   icon: Icon(FontAwesomeIcons.calendarDay),
                   onPressed: () {}),
-              title: Text("Date", style: TextStyle(
-                  fontWeight: FontWeight.bold
-              ),),
+              title: Text(
+                "Date",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(Timeago.format(message.txDate)),
             ),
             ListTile(
@@ -634,9 +636,10 @@ class InfoPanel extends StatelessWidget {
                   color: Colors.purpleAccent,
                   icon: Icon(FontAwesomeIcons.wallet),
                   onPressed: () {}),
-              title: Text("Balance after Transaction", style: TextStyle(
-                  fontWeight: FontWeight.bold
-              ),),
+              title: Text(
+                "Balance after Transaction",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               subtitle: Text(formatAsCurrency(message.txBal)),
             ),
             ListTile(
@@ -647,10 +650,12 @@ class InfoPanel extends StatelessWidget {
                   color: Colors.purpleAccent,
                   icon: Icon(FontAwesomeIcons.envelope),
                   onPressed: () {}),
-              title: Text("Message", style: TextStyle(
-                  fontWeight: FontWeight.bold
-              ),),
-              subtitle: Text(message.bodyString, maxLines: 3, overflow: TextOverflow.ellipsis),
+              title: Text(
+                "Message",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(message.bodyString,
+                  maxLines: 3, overflow: TextOverflow.ellipsis),
             ),
             Padding(padding: EdgeInsets.symmetric(vertical: 8.0))
           ],
@@ -663,13 +668,12 @@ class InfoPanel extends StatelessWidget {
     return NumberFormat.currency(symbol: "\$").format(value);
   }
 
-  String _capitalize(String message){
+  String _capitalize(String message) {
     return "${message[0].toUpperCase()}${message.substring(1)}";
   }
 
   String _titleFromMessage(MPMessage message) {
-
-    switch(message.mpMessageType){
+    switch (message.mpMessageType) {
       case MPMessageType.MP_TYPE_AIRTIME:
         return "Airtime Purchase";
         break;
@@ -679,7 +683,7 @@ class InfoPanel extends StatelessWidget {
       case MPMessageType.MP_TYPE_SENT:
         return "Expense: ${_capitalize(message.participant)}";
       case MPMessageType.MP_TYPE_WITHDRAW:
-        return "Withdraw: ${ _capitalize(message.participant)}";
+        return "Withdraw: ${_capitalize(message.participant)}";
       case MPMessageType.MP_TYPE_PAYBILL:
         return "Paybill: ${_capitalize(message.participant)}";
       case MPMessageType.MP_TYPE_TXBAL:
@@ -737,9 +741,9 @@ class _BackdropPanel extends StatelessWidget {
             ),
 
             ///Simple Divider
-            /*Divider(
+            Divider(
               height: 1.0,
-            ),*/
+            ),
 
             ///Child goes here!
             Expanded(

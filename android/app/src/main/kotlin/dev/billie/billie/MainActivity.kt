@@ -1,7 +1,9 @@
 package dev.billie.billie
 
-import android.app.Activity
-import android.content.*
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -9,23 +11,19 @@ import android.os.Bundle
 import android.provider.Telephony
 import android.support.v4.content.ContextCompat
 import android.widget.Toast
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import io.flutter.app.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
-
-
-
-
-
-
-
-
-
-
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity: FlutterActivity() {
-  private val CHANNEL = "dev.billie.billie/sms"
+
+    private val CHANNEL = "dev.billie.billie/sms"
+    private  val ZIPUPLOADWORKERTAG = "ZipUploadWorker"
 
 
     private  fun _startZipService(){
@@ -35,7 +33,7 @@ class MainActivity: FlutterActivity() {
         ContextCompat.startForegroundService(this, intent)
     }
 
-    private val receiver = object : BroadcastReceiver() {
+    /*private val receiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             val bundle = intent.extras
@@ -52,10 +50,10 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
-    }
+    }*/
 
 
-    override fun onResume() {
+    /*override fun onResume() {
         super.onResume()
         registerReceiver(receiver, IntentFilter(
                 ZipService.NOTIFICATION))
@@ -64,13 +62,22 @@ class MainActivity: FlutterActivity() {
     override fun onPause() {
         super.onPause()
         unregisterReceiver(receiver)
-    }
+    }*/
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     GeneratedPluginRegistrant.registerWith(this)
-      _startZipService()
+      //_startZipService()
+
+        val zipUploadWorkerBuilder =
+                PeriodicWorkRequest.Builder(ZipUploadWorker::class.java, 15,
+                        TimeUnit.MINUTES).setInitialDelay(10000, TimeUnit.MILLISECONDS)
+
+        val request = zipUploadWorkerBuilder.build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                ZIPUPLOADWORKERTAG, ExistingPeriodicWorkPolicy.KEEP, request)
+
     MethodChannel(flutterView, CHANNEL).setMethodCallHandler { call, result ->
 
       if (call.method == "getBatteryLevel") {

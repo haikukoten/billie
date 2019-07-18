@@ -40,8 +40,8 @@ class SmsRetrieverBloc {
       _queryMessages.debounceTime(Duration(milliseconds: 600)).distinct(), allContacts,
           (String filter, Iterable<Contact> contacts) {
         return contacts.where((contact) =>
-        contact.phones.any((phone) => phone.value.contains(filter)) ||
-            contact.displayName.toLowerCase().contains(filter.toLowerCase())
+        contact.phones.any(
+                (phone) => phone.value.contains(filter)) || contact.displayName.toLowerCase().contains(filter.toLowerCase())
         );
       });
 

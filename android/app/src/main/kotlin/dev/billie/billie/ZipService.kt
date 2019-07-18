@@ -9,14 +9,13 @@ import android.app.*
 import android.content.Intent
 import android.os.Build
 import android.support.v4.app.NotificationCompat
-import android.widget.Toast
 
 class ZipService : IntentService("ZipService") {
 
     private var result = Activity.RESULT_CANCELED
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Toast.makeText(this, "ZipService Up", Toast.LENGTH_SHORT).show()
+        // Toast.makeText(this, "ZipService Up", Toast.LENGTH_SHORT).show()
         val input = intent?.getStringExtra("inputExtra")
 
         createNotificationChannel()
@@ -38,7 +37,9 @@ class ZipService : IntentService("ZipService") {
 
     // will be called asynchronously by Android
     override fun onHandleIntent(intent: Intent?) {
-        Toast.makeText(this@ZipService, "HandleZipService", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this@ZipService, "HandleZipService", Toast.LENGTH_SHORT).show();
+        //val p: Process = Runtime.getRuntime().exec("getprop").inputStream
+        //P7ZipApi.executeCommand("tar --help")
         Thread.sleep(10000)
         publishResults("PATH", Activity.RESULT_OK)
     }
