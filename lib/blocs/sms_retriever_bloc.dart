@@ -17,11 +17,11 @@ class SmsRetrieverBloc {
   final ContactServiceProxy contactServiceProxy;
 
   BehaviorSubject<List<MPMessage>> _mpesaSmsController = BehaviorSubject<List<MPMessage>>();
-  StreamController<List<DataPoint<DateTime>>> _datapointController = StreamController();
-  StreamController<Map<String,double>> _statsController = StreamController();
-  StreamController<Map<DateTime,List<MPMessage>>> _historyChunkController = StreamController();
+  BehaviorSubject<List<DataPoint<DateTime>>> _datapointController = BehaviorSubject<List<DataPoint<DateTime>>>();
+  BehaviorSubject<Map<String,double>> _statsController = BehaviorSubject<Map<String,double>>();
+  BehaviorSubject<Map<DateTime,List<MPMessage>>> _historyChunkController = BehaviorSubject<Map<DateTime,List<MPMessage>>>();
 
-  ReplaySubject<String>   _queryMessages =  ReplaySubject<String>(maxSize: 1);
+  ReplaySubject<String>   _queryMessages =  ReplaySubject<String>(maxSize: 2);
 
   Stream<List<MPMessage>> get mpesaSmsStream => _mpesaSmsController.stream;
   Stream<List<DataPoint<DateTime>>> get datapointsStream => _datapointController.stream;
