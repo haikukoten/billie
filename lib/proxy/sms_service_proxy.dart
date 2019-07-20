@@ -58,9 +58,9 @@ class SmsServiceProxy {
     return mpesaMessages;
   }
 
+  //TODO: Limit the number of entries!! based on date windows or something
   Future<List<DataPoint<DateTime>>> getDataPoints(List<MPMessage> messages) async {
-    return messages.map((e) =>
-        DataPoint<DateTime>(value: e.txBal, xAxis: e.txDate)).toList();
+    return messages.map((e) => DataPoint<DateTime>(value: e.txBal, xAxis: e.txDate)).toList();
   }
 
   Future<Map<String,double>> getReducedSums(List<MPMessage> messages) async {
