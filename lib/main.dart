@@ -169,6 +169,7 @@ class _BillieWalletState extends State<BillieWallet>
           return Material(
             color: Colors.white,
             child: StreamBuilder<Object>(
+                initialData: [],
                 stream: smsRetrieverBloc.historyChunks,
                 builder: (context, AsyncSnapshot<Object> snapshot) {
                   return CustomScrollView(
@@ -401,16 +402,13 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(WalletStatistic oldDelegate) {
-    // TODO: implement shouldRebuild
     return oldDelegate != this;
   }
 
   @override
-  // TODO: implement maxExtent
   double get maxExtent => 136.0;
 
   @override
-  // TODO: implement minExtent
   double get minExtent => 109.0;
 }
 
@@ -421,7 +419,6 @@ class WalletBalanceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return QuickStats(
         balance: stats[SmsServiceProxy.BALANCE],
         expense: stats[SmsServiceProxy.EXPENSE],
