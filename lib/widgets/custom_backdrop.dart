@@ -8,36 +8,34 @@ import 'package:billie/widgets/history_tile.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart' as SpinKit;
 import 'dart:math' as math;
-
-import 'package:transparent_image/transparent_image.dart';
+import 'package:timeago/timeago.dart' as Timeago;
 
 enum FrontPanels { searchPanel, infoPanel }
 
-
-class MessageViewModel extends Model{
-
+class MessageViewModel extends Model {
   bool _useCondensedModel;
 
   MessageViewModel(this._useCondensedModel);
 
   bool get activeModelType => _useCondensedModel;
 
-
   void activate(bool model) {
-    if(model != _useCondensedModel){
+    if (model != _useCondensedModel) {
       _useCondensedModel = model;
       notifyListeners();
     }
   }
-
 }
 
 ///Model to track which panel will be rendered onto the top of the stack
 class PanelModel extends Model {
   ///
   FrontPanels _activePanel;
+  MPMessage _selectedMessage;
 
   PanelModel(this._activePanel);
 
@@ -58,11 +56,12 @@ class PanelModel extends Model {
         //onTap: (){activate(FrontPanels.infoPanel);},
         child: _activePanel == FrontPanels.searchPanel
             ? SearchActivity()
-            : InfoPanel(),
+            : InfoPanel(_selectedMessage),
       );
 
-  void activate(FrontPanels panel) {
+  void activate(FrontPanels panel, [MPMessage message]) {
     _activePanel = panel;
+    _selectedMessage = message ?? _selectedMessage;
     notifyListeners();
   }
 }
@@ -94,12 +93,15 @@ class _SearchActivityState extends State<SearchActivity> {
   void dispose() {
     super.dispose();
     controller.dispose();
+    if (focusNode.hasFocus) {
+      focusNode.unfocus();
+    }
     focusNode.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    smsRetrieverBloc  = MPMessagesProvider.smsBlocOf(context);
+    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
 
     return Scrollbar(
       child: ScopedModel(
@@ -108,7 +110,7 @@ class _SearchActivityState extends State<SearchActivity> {
           physics: BouncingScrollPhysics(),
           slivers: <Widget>[
             SliverPersistentHeader(
-              floating: true,
+                floating: true,
                 delegate: SearchActivityDelegate(
                     editingController: controller,
                     focusNode: focusNode,
@@ -119,104 +121,195 @@ class _SearchActivityState extends State<SearchActivity> {
                 height: 24.0,
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text("CONTACT RESULTS", style: TextStyle(
-                  fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
-                ),),
+                child: Text(
+                  "CONTACT RESULTS",
+                  style: TextStyle(
+                      fontSize: 10.0,
+                      color: Colors.blueGrey,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             SliverToBoxAdapter(
               child: Container(
                 height: 72.0,
                 child: StreamBuilder<Iterable<Contact>>(
-                  stream: smsRetrieverBloc.filterContacts,
-                  builder: (context, snapshot) {
-                    switch (snapshot.connectionState){
-                      case ConnectionState.active:
-                      case ConnectionState.done:
+                    stream: smsRetrieverBloc.filterContacts,
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.active:
+                        case ConnectionState.done:
+                          List<Contact> data =
+                              snapshot.data.take(10).toList() ?? [];
 
-                      List<Contact> data =  snapshot.data.take(10).toList() ?? [];
-
-                      return   data.length > 0 ?
-                      ListView.builder(itemBuilder: (_,i){
-                        return  Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              FutureBuilder<Iterable<Contact>>(
-                                future: ContactServiceProxy.getInstance().searchContact(data[i].displayName),
-                                builder: (context, snapshot) {
-                                  switch(snapshot.connectionState){
-                                    case ConnectionState.done:
-                                    case ConnectionState.active:
-                                      //print("${data[i].displayName}: ${snapshot.data.first.avatar.isEmpty}");
-                                    return (snapshot.hasData && snapshot.data.length > 0) ? InkWell(
-                                      child: CircleAvatar(
-                                        radius: 24.0,
-                                        child: ClipOval(
-                                          child: snapshot.data.first.avatar.isEmpty
-                                              ? Text(data[i].displayName.substring(0,1))
-                                              : Image.memory(snapshot.data.first.avatar),
-                                        ),
+                          return data.length > 0
+                              ? ListView.builder(
+                                  itemBuilder: (_, i) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 2.0, vertical: 4.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          FutureBuilder<Iterable<Contact>>(
+                                              future: ContactServiceProxy
+                                                      .getInstance()
+                                                  .searchContact(
+                                                      data[i].displayName),
+                                              builder: (context, snapshot) {
+                                                switch (
+                                                    snapshot.connectionState) {
+                                                  case ConnectionState.done:
+                                                  case ConnectionState.active:
+                                                    //print("${data[i].displayName}: ${snapshot.data.first.avatar.isEmpty}");
+                                                    return (snapshot.hasData &&
+                                                            snapshot.data
+                                                                    .length >
+                                                                0)
+                                                        ? InkWell(
+                                                            child: CircleAvatar(
+                                                              radius: 24.0,
+                                                              child: ClipOval(
+                                                                child: snapshot
+                                                                        .data
+                                                                        .first
+                                                                        .avatar
+                                                                        .isEmpty
+                                                                    //? Text(data[i].displayName.substring(0,1))
+                                                                    ? Icon(
+                                                                        FontAwesomeIcons
+                                                                            .userAlt,
+                                                                        size:
+                                                                            20.0,
+                                                                      )
+                                                                    : Image.memory(
+                                                                        snapshot
+                                                                            .data
+                                                                            .first
+                                                                            .avatar),
+                                                              ),
+                                                            ),
+                                                            onTap: () {
+                                                              String phoneNo = data[
+                                                                      i]
+                                                                  .phones
+                                                                  .first
+                                                                  .value
+                                                                  .replaceAll(
+                                                                      " ", "")
+                                                                  .replaceAll(
+                                                                      "-", "")
+                                                                  .trim();
+                                                              smsRetrieverBloc
+                                                                  .queryMessages
+                                                                  .add(phoneNo);
+                                                              controller.text =
+                                                                  phoneNo;
+                                                            },
+                                                          )
+                                                        : InkWell(
+                                                            child: CircleAvatar(
+                                                              radius: 24.0,
+                                                              child: ClipOval(
+                                                                child: Text(data[
+                                                                        i]
+                                                                    .displayName
+                                                                    .substring(
+                                                                        0, 1)),
+                                                              ),
+                                                            ),
+                                                            onTap: () {
+                                                              String phoneNo = data[
+                                                                      i]
+                                                                  .phones
+                                                                  .first
+                                                                  .value
+                                                                  .replaceAll(
+                                                                      " ", "")
+                                                                  .replaceAll(
+                                                                      "-", "")
+                                                                  .trim();
+                                                              smsRetrieverBloc
+                                                                  .queryMessages
+                                                                  .add(phoneNo);
+                                                              controller.text =
+                                                                  phoneNo;
+                                                            },
+                                                          );
+                                                    break;
+                                                  default:
+                                                    return InkWell(
+                                                      child: CircleAvatar(
+                                                        radius: 24.0,
+                                                        child: ClipOval(
+                                                          child: Text(data[i]
+                                                              .displayName
+                                                              .substring(0, 1)),
+                                                        ),
+                                                      ),
+                                                      onTap: () {
+                                                        String phoneNo = data[i]
+                                                            .phones
+                                                            .first
+                                                            .value
+                                                            .replaceAll(" ", "")
+                                                            .replaceAll("-", "")
+                                                            .trim();
+                                                        //smsRetrieverBloc.queryMessages.add(phoneNo);
+                                                        controller.text =
+                                                            phoneNo;
+                                                      },
+                                                    );
+                                                }
+                                              }),
+                                          Container(
+                                            width: 72,
+                                            alignment: Alignment.center,
+                                            child: Center(
+                                              child: Text(
+                                                data[i].displayName,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 12.0,
+                                                  //fontWeight: FontWeight.bold
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                        ],
                                       ),
-                                      onTap: (){
-                                        String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
-                                        smsRetrieverBloc.queryMessages.add(phoneNo);
-                                        controller.text = phoneNo;
-                                      },
-                                    ): InkWell(
-                                      child: CircleAvatar(
-                                        radius: 24.0,
-                                        child: ClipOval(
-                                          child:Text(data[i].displayName.substring(0,1)),
-                                        ),
-                                      ),
-                                      onTap: (){
-                                        String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
-                                        smsRetrieverBloc.queryMessages.add(phoneNo);
-                                        controller.text = phoneNo;
-                                      },
                                     );
-                                    break;
-                                    default:
-                                      return InkWell(
-                                        child: CircleAvatar(
-                                          radius: 24.0,
-                                          child: ClipOval(
-                                            child:Text(data[i].displayName.substring(0,1)),
-                                          ),
-                                        ),
-                                        onTap: (){
-                                          String phoneNo = data[i].phones.first.value.replaceAll(" ", "").replaceAll("-", "").trim();
-                                          smsRetrieverBloc.queryMessages.add(phoneNo);
-                                          controller.text = phoneNo;
-                                        },
-                                      );
-                                  }
-                                }
-                              ),
-                              Text(data[i].displayName, style: TextStyle(
-                                  fontSize: 12.0,
-                                  fontWeight: FontWeight.bold
-                              ),)
-                            ],
-                          ),
-                        );
-                      },physics: BouncingScrollPhysics(),
-                        scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(
-                          horizontal: 16.0
-                        ), itemCount: data.length,) : Center(
-                        child: Text("No Contact found!"),
-                      );
-                      break;
-                      default:
-                        return Center(
-                          child: Text("Results not available"),
-                        );
-                        break;
-                    }
-                  }
-                ),
+                                  },
+                                  physics: BouncingScrollPhysics(),
+                                  scrollDirection: Axis.horizontal,
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 16.0),
+                                  itemCount: data.length,
+                                )
+                              : Center(
+                                  child: Text("No Contact found!"),
+                                );
+                          break;
+                        case ConnectionState.waiting:
+                          return Container(
+                            height: 72.0,
+                            alignment: Alignment.center,
+                            child: Text(
+                              "Tap contact for specific results",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.purpleAccent),
+                            ),
+                          );
+                        default:
+                          return Center(
+                            child: Text("Results not available"),
+                          );
+                          break;
+                      }
+                    }),
               ),
             ),
             SliverToBoxAdapter(
@@ -224,56 +317,82 @@ class _SearchActivityState extends State<SearchActivity> {
                 height: 24.0,
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text("MESSAGE RESULTS", style: TextStyle(
-                    fontSize: 10.0, color: Colors.blueGrey, fontWeight: FontWeight.bold
-                ),),
+                child: Text(
+                  "MESSAGE RESULTS",
+                  style: TextStyle(
+                      fontSize: 10.0,
+                      color: Colors.blueGrey,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             StreamBuilder<List<MPMessage>>(
-              stream: smsRetrieverBloc.queryResults,
-              builder: (context, snapshot) {
-                switch(snapshot.connectionState){
-                  case ConnectionState.active:
-                  case ConnectionState.done:
-                    //TODO: Add Style of display switchers!
-                  return snapshot.data?.length > 0 ?
-                  SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                          (c,i) =>
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  ScopedModelDescendant<MessageViewModel>(
-                                      builder: (_, __, model) =>
-                                          AnimatedCrossFade(
-                                              firstChild: SearchMessageTile(snapshot.data[i]),
-                                              secondChild: HistoryTile(snapshot.data[i]),
-                                              crossFadeState: model.activeModelType ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                                              duration: Duration(milliseconds: 200))
-                                  ),
-                                  Divider()
-                                ],
-                              )
-
-                          , childCount: snapshot.data.length,
-                  )) : SliverToBoxAdapter(
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Text("No Results Found!!"),
-                    ),
-                  );
-                  default:
-                    return SliverToBoxAdapter(
-                      child: Container(
-                        height: 72.0,
-                        child: Center(
-                          child: CircularProgressIndicator(),
+                initialData: [],
+                stream: smsRetrieverBloc.queryResults,
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.active:
+                    case ConnectionState.done:
+                      //TODO: Add Style of display switchers!
+                      return snapshot.data.length > 0
+                          ? SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                              (c, i) => ScopedModelDescendant<MessageViewModel>(
+                                  builder: (_, __, model) =>
+                                      ScopedModelDescendant<PanelModel>(
+                                          builder: (context, _, panelModel) {
+                                        return InkWell(
+                                          onTap: () {
+                                            panelModel.activate(
+                                                FrontPanels.infoPanel,
+                                                snapshot.data[i]);
+                                          },
+                                          child: AnimatedCrossFade(
+                                              firstChild: SearchMessageTile(
+                                                  snapshot.data[i]),
+                                              secondChild:
+                                                  HistoryTile(snapshot.data[i]),
+                                              crossFadeState: model
+                                                      .activeModelType
+                                                  ? CrossFadeState.showSecond
+                                                  : CrossFadeState.showFirst,
+                                              duration:
+                                                  Duration(milliseconds: 400)),
+                                        );
+                                      })),
+                              childCount: snapshot.data.length,
+                            ))
+                          : SliverToBoxAdapter(
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: Text("No Results Found!!"),
+                              ),
+                            );
+                      break;
+                    case ConnectionState.waiting:
+                      return SliverFillRemaining(
+                        child: Container(
+                          height: 96.0,
+                          child: Center(
+                            child: SpinKit.SpinKitCubeGrid(
+                              duration: Duration(milliseconds: 1200),
+                              color: Colors.purpleAccent,
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                }
-              }
-            )
+                      );
+                      break;
+                    default:
+                      return SliverToBoxAdapter(
+                        child: Container(
+                          height: 72.0,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      );
+                  }
+                })
           ],
         ),
       ),
@@ -281,9 +400,7 @@ class _SearchActivityState extends State<SearchActivity> {
   }
 }
 
-enum Commands {
-  toggleViewModel
-}
+enum Commands { toggleViewModel }
 
 class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
   final TextEditingController editingController;
@@ -291,12 +408,11 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
   final Function clearCallBack;
   final SmsRetrieverBloc smsRetrieverBloc;
 
-  SearchActivityDelegate({
-    this.editingController,
-    this.focusNode,
-    this.clearCallBack,
-    this.smsRetrieverBloc
-  });
+  SearchActivityDelegate(
+      {this.editingController,
+      this.focusNode,
+      this.clearCallBack,
+      this.smsRetrieverBloc});
 
   @override
   Widget build(
@@ -318,11 +434,16 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
                     hintText: "Search Transactions",
-                    prefixIcon: Icon(FontAwesomeIcons.searchDollar, size: 12.0,color: Colors.purpleAccent,),
+                    prefixIcon: Icon(
+                      FontAwesomeIcons.searchDollar,
+                      size: 12.0,
+                      color: Colors.purpleAccent,
+                    ),
                     suffix: IconButton(
                         iconSize: 12.0,
                         icon: Icon(FontAwesomeIcons.backspace),
                         onPressed: () {
+                          /// Clearing bug workaround!
                           focusNode.requestFocus();
                           Future.delayed(Duration(milliseconds: 50), () {
                             editingController.clear();
@@ -343,13 +464,15 @@ class SearchActivityDelegate extends SliverPersistentHeaderDelegate {
                         break;
                     }
                   },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<Commands>>[
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<Commands>>[
                     CheckedPopupMenuItem<Commands>(
                       checked: model.activeModelType,
                       value: Commands.toggleViewModel,
-                      child: const Text('Condensed', style: TextStyle(
-                        fontSize: 14.0
-                      ),),
+                      child: const Text(
+                        'Condensed',
+                        style: TextStyle(fontSize: 14.0),
+                      ),
                     ),
                     //const PopupMenuDivider(),
                     // ...other items listed here
@@ -397,16 +520,177 @@ class SearchPanel extends StatelessWidget {
 }
 
 class InfoPanel extends StatelessWidget {
+  final MPMessage message;
+
+  InfoPanel(this.message);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Text(
-          'Panel TWO',
-          style: TextStyle(fontSize: 42.0),
+    return ScopedModelDescendant<PanelModel>(
+      builder: (_, Widget child, PanelModel model) {
+        return SizedBox.expand(
+          child: Column(
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Spacer(),
+                  IconButton(
+                      icon: Icon(FontAwesomeIcons.timesCircle),
+                      iconSize: 16.0,
+                      color: Colors.redAccent,
+                      onPressed: () {
+                        model.activate(FrontPanels.searchPanel);
+                      })
+                ],
+              ),
+              Expanded(child: child)
+            ],
+          ),
+        );
+      },
+      child: Container(
+        child: ListView(
+          physics: BouncingScrollPhysics(),
+          children: <Widget>[
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Center(
+                  child: Icon(
+                FontAwesomeIcons.userAlt,
+                size: 24.0,
+              )),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Center(
+                child: Text(
+                  _titleFromMessage(message),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  color: Colors.purpleAccent,
+                  iconSize: 16.0,
+                  icon: Icon(FontAwesomeIcons.fileInvoiceDollar),
+                  onPressed: () {}),
+              title: Text(
+                "Transaction Code",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(message.txCode.toUpperCase()),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  icon: Icon(FontAwesomeIcons.moneyBillWave),
+                  onPressed: () {}),
+              title: Text(
+                "Amount",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(formatAsCurrency(message.txAmount)),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  icon: Icon(FontAwesomeIcons.funnelDollar),
+                  onPressed: () {}),
+              title: Text(
+                "Transaction Fees",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(formatAsCurrency(message.txFees)),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  icon: Icon(FontAwesomeIcons.calendarDay),
+                  onPressed: () {}),
+              title: Text(
+                "Date",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(Timeago.format(message.txDate)),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  icon: Icon(FontAwesomeIcons.wallet),
+                  onPressed: () {}),
+              title: Text(
+                "Balance after Transaction",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(formatAsCurrency(message.txBal)),
+            ),
+            ListTile(
+              //dense: true,
+              onTap: () {},
+              leading: IconButton(
+                  iconSize: 16.0,
+                  color: Colors.purpleAccent,
+                  icon: Icon(FontAwesomeIcons.envelope),
+                  onPressed: () {}),
+              title: Text(
+                "Message",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(message.bodyString,
+                  maxLines: 3, overflow: TextOverflow.ellipsis),
+            ),
+            Padding(padding: EdgeInsets.symmetric(vertical: 8.0))
+          ],
         ),
       ),
     );
+  }
+
+  String formatAsCurrency(double value) {
+    return NumberFormat.currency(symbol: "\$").format(value);
+  }
+
+  String _capitalize(String message) {
+    return "${message[0].toUpperCase()}${message.substring(1)}";
+  }
+
+  String _titleFromMessage(MPMessage message) {
+    switch (message.mpMessageType) {
+      case MPMessageType.MP_TYPE_AIRTIME:
+        return "Airtime Purchase";
+        break;
+      case MPMessageType.MP_TYPE_RECEIVE:
+        return "Income: ${_capitalize(message.participant)}";
+        break;
+      case MPMessageType.MP_TYPE_SENT:
+        return "Expense: ${_capitalize(message.participant)}";
+      case MPMessageType.MP_TYPE_WITHDRAW:
+        return "Withdraw: ${_capitalize(message.participant)}";
+      case MPMessageType.MP_TYPE_PAYBILL:
+        return "Paybill: ${_capitalize(message.participant)}";
+      case MPMessageType.MP_TYPE_TXBAL:
+        return "Balance Request";
+      default:
+        return "Service message (unclassified)";
+    }
   }
 }
 
@@ -457,9 +741,9 @@ class _BackdropPanel extends StatelessWidget {
             ),
 
             ///Simple Divider
-            /*Divider(
+            Divider(
               height: 1.0,
-            ),*/
+            ),
 
             ///Child goes here!
             Expanded(

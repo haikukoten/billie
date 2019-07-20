@@ -19,7 +19,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  bezier_chart: "^1.0.6"
+  bezier_chart: ^1.0.6
   flutter_sticky_header:
     git:
       url: git://github.com/letsar/flutter_sticky_header.git
@@ -28,10 +28,9 @@ dependencies:
   font_awesome_flutter: ^8.4.0
   transparent_image: ^1.0.0
   rxdart: ^0.22.0
-  flutter_backdrop: ^1.0.3
   scoped_model: ^1.0.1
   contacts_service: ^0.2.8
-  async: ^2.2.0
+  flutter_spinkit: ^3.1.0
   #date_utils: ^0.0.1
 
   # The following adds the Cupertino Icons font to your application.
@@ -81,6 +80,62 @@ flutter:
          - asset: assets/fonts/DM_Serif_Display/DMSerifDisplay-Regular.ttf
          - asset: assets/fonts/DM_Serif_Display/DMSerifDisplay-Italic.ttf
            style: italic
-  #
+     - family: Calibre
+       fonts:
+         - asset: assets/fonts/Calibre/CalibreRegular.otf
+           weight: 400
+         - asset: assets/fonts/Calibre/CalibreBold.otf
+           weight: 700
+         - asset: assets/fonts/Calibre/CalibreBoldItalic.otf
+           style: italic
+           weight: 700
+         - asset: assets/fonts/Calibre/CalibreBlack.otf
+           weight: 900
+         - asset: assets/fonts/Calibre/CalibreBlackItalic.otf
+           style: italic
+           weight: 900
+     - family: Poppins
+       fonts:
+         - asset:  assets/fonts/Poppins/Poppins-Regular.ttf
+           weight: 400
+         - asset:  assets/fonts/Poppins/Poppins-Bold.ttf
+           weight: 700
+         - asset:  assets/fonts/Poppins/Poppins-BoldItalic.ttf
+           style:  italic
+           weight: 700
+         - asset:  assets/fonts/Poppins/Poppins-Black.ttf
+           weight: 900
+         - asset:  assets/fonts/Poppins/Poppins-BlackItalic.ttf
+           style:  italic
+           weight: 900
+     - family: NeueHaasGroteskTXPro
+       fonts:
+         - asset:  assets/fonts/NeueHaasGroteskTX/NHaasGroteskTXPro-55Rg.ttf
+           weight: 400
+         - asset:  assets/fonts/NeueHaasGroteskTX/NHaasGroteskTXPro-56It.ttf
+           style:  italic
+           weight: 400
+         - asset:  assets/fonts/NeueHaasGroteskTX/NHaasGroteskTXPro-75Bd.ttf
+           weight: 700
+         - asset:  assets/fonts/NeueHaasGroteskTX/NHaasGroteskTXPro-76BdIt.ttf
+           style:  italic
+           weight: 700
+     - family: GoogleSans
+       fonts:
+         - asset:  assets/fonts/GoogleSans/ProductSans-Regular.ttf
+           weight: 400
+         - asset:  assets/fonts/GoogleSans/ProductSans-Italic.ttf
+           style:  italic
+           weight: 400
+         - asset:  assets/fonts/GoogleSans/ProductSans-Bold.ttf
+           weight: 700
+         - asset:  assets/fonts/GoogleSans/ProductSans-BoldItalic.ttf
+           style:  italic
+           weight: 700
+         - asset:  assets/fonts/GoogleSans/ProductSans-Black.ttf
+           weight: 900
+         - asset:  assets/fonts/GoogleSans/ProductSans-BlackItalic.ttf
+           style:  italic
+           weight: 900
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

@@ -10,11 +10,9 @@ import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
 import 'package:billie/widgets/quick_stats.dart';
 import 'dart:math' as math;
-import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import 'models/MPesaMessage.dart';
 import 'package:billie/widgets/custom_backdrop.dart';
 
 void main() => runApp(MyApp());
@@ -37,7 +35,7 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.blue,
-          fontFamily: "Raleway"
+          fontFamily: "GoogleSans"
       ),
       home: BillieWallet(),
     );
@@ -62,6 +60,7 @@ class _BillieWalletState extends State<BillieWallet>
 
   List<Widget> slivers;
   GlobalKey<BackdropState> _globalBackdropKey = GlobalKey(debugLabel: "BackDropState");
+  ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
   @override
   void initState() {
@@ -69,6 +68,7 @@ class _BillieWalletState extends State<BillieWallet>
     slivers = List<Widget>();
     _scrollController = ScrollController();
     panelModel = PanelModel(FrontPanels.searchPanel);
+    //panelVisible.value = true;
   }
 
   @override
@@ -102,7 +102,7 @@ class _BillieWalletState extends State<BillieWallet>
               color: Colors.black,
               fontWeight: FontWeight.bold,
               //letterSpacing: 1.0,
-              fontFamily: "DMSerifDisplay"),
+              fontFamily: "Raleway"),
         ),
         centerTitle: true,
         elevation: 0.0,
@@ -169,6 +169,7 @@ class _BillieWalletState extends State<BillieWallet>
           return Material(
             color: Colors.white,
             child: StreamBuilder<Object>(
+                initialData: [],
                 stream: smsRetrieverBloc.historyChunks,
                 builder: (context, AsyncSnapshot<Object> snapshot) {
                   return CustomScrollView(
@@ -289,39 +290,68 @@ class _BillieWalletState extends State<BillieWallet>
               // ...
             },
           ),
+          ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: Icon(FontAwesomeIcons.connectdevelop),
+              iconSize: 16.0,
+              color: Colors.purpleAccent,
+              onPressed: () {},
+            ),
+            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+            title: Text(
+              'Feedback',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text("Contact developer"),
+            onTap: () {
+              // Update the state of the app.
+              // ...
+            },
+          ),
         ],
       );
     }
 
-    return Scaffold(
-        backgroundColor: Colors.white,
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
-        /*floatingActionButton: FloatingActionButton(
-            child: Icon(FontAwesomeIcons.commentsDollar,size: 16.0,),
-            backgroundColor: Colors.purpleAccent,
-            onPressed: (){
-              _scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
-            }),*/
-        drawer: Drawer(
-          child: renderDrawerListItems()
-        ),
-        //color: Colors.purpleAccent,
-        body: SafeArea(
-            child: MPMessagesProvider(
-          child: Backdrop(
-              key: _globalBackdropKey,
-              frontLayer: ScopedModel<PanelModel>(
-                model: panelModel,
-                child: SearchPanel(),
-              ),
-              frontHeaderVisibleClosed: false,
-              frontHeaderHeight: 35.0,
-              frontHeader: Center(
-                child: Icon(FontAwesomeIcons.gripHorizontal, color: Colors.purpleAccent,),
-              ),
-              frontPanelOpenHeight: 72.0,
-              backLayer: Scrollbar(child: _createScrollViewArea())),
-        )));
+    return WillPopScope(
+      onWillPop: () async {
+        if(panelVisible.value){
+          _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+          return  false;
+        } else
+          return true;
+      },
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+          floatingActionButton: FloatingActionButton(
+              child: Icon(FontAwesomeIcons.handHoldingUsd,size: 16.0,),
+              backgroundColor: Colors.purpleAccent,
+              onPressed: (){
+                //_scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
+              }),
+          drawer: Drawer(
+            child: renderDrawerListItems()
+          ),
+          //color: Colors.purpleAccent,
+          body: SafeArea(
+              child: MPMessagesProvider(
+            child: Backdrop(
+                key: _globalBackdropKey,
+                frontLayer: ScopedModel<PanelModel>(
+                  model: panelModel,
+                  child: SearchPanel(),
+                ),
+                frontHeaderVisibleClosed: false,
+                frontHeaderHeight: 35.0,
+                frontHeader: Center(
+                  child: Icon(FontAwesomeIcons.gripHorizontal),
+                ),
+                frontPanelOpenHeight: 72.0,
+                panelVisible: panelVisible,
+                backLayer: Scrollbar(child: _createScrollViewArea())),
+          ))),
+    );
     //);
   }
 }
@@ -372,16 +402,13 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(WalletStatistic oldDelegate) {
-    // TODO: implement shouldRebuild
     return oldDelegate != this;
   }
 
   @override
-  // TODO: implement maxExtent
   double get maxExtent => 136.0;
 
   @override
-  // TODO: implement minExtent
   double get minExtent => 109.0;
 }
 
@@ -392,7 +419,6 @@ class WalletBalanceWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return QuickStats(
         balance: stats[SmsServiceProxy.BALANCE],
         expense: stats[SmsServiceProxy.EXPENSE],
@@ -459,6 +485,7 @@ class SliverSectionBuilder {
                                     : '${timeago.format(dateKey).toUpperCase()} on ${months[(dateKey.month - 1)]} ${dateKey.day ?? "Unknown"}',
                                 style: TextStyle(
                                     fontSize: 12.0,
+                                    fontFamily: "Raleway",
                                     fontWeight: FontWeight.bold,
                                     color: state.isPinned
                                         ? Colors.purple
@@ -489,11 +516,10 @@ class SliverSectionBuilder {
 }
 
 class ChartWrapper extends StatelessWidget {
-  SmsRetrieverBloc smsRetrieverBloc;
 
   @override
   Widget build(BuildContext context) {
-    smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
+    SmsRetrieverBloc smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return Center(
         child: Container(
             color: Colors.white,
@@ -510,7 +536,6 @@ class ChartWrapper extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 16.0),
                         child: BezierChart(
                           fromDate: data.last.xAxis,
-                          //TODO: Use a custom scale to better handle missing values
                           bezierChartScale: BezierChartScale.WEEKLY,
                           toDate: data.first.xAxis,
                           selectedDate: data.first.xAxis,
