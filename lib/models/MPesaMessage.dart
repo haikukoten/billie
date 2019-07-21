@@ -1,6 +1,6 @@
-/*
- * Enumarated types of transactions!
- */
+
+import 'package:quiver/core.dart';
+
 enum MPMessageType {
   MP_TYPE_RECEIVE,
   MP_TYPE_SENT,
@@ -15,7 +15,7 @@ enum MPMessageType {
 /*
   * MPMessage: Class that returns objects based on parsed M-Pesa messages
   */
-class MPMessage {
+class MPMessage  {
   final String participant;
   final String txCode;
   final MPMessageType mpMessageType;
@@ -40,6 +40,9 @@ class MPMessage {
     return "Transaction: { $txCode, $txAmount, $txBal, $txFees, $mpMessageType, $txDate } \n";
   }
 
+  bool operator == (other) => other is MPMessage && other.txCode == txCode;
+
+  int get hashCode => hash2(txCode, bodyString);
 
 }
 
