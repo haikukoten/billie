@@ -14,7 +14,6 @@ import 'package:billie/widgets/quick_stats.dart';
 import 'dart:math' as math;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
-
 import 'package:billie/widgets/custom_backdrop.dart';
 
 void main() => runApp(MyApp());
@@ -534,7 +533,8 @@ class SliverSectionBuilder {
 }
 
 class ChartWrapper extends StatelessWidget {
-  final SplayTreeMap<DateTime,DataPoint<DateTime>> preComputeCache = new SplayTreeMap();
+  final HashMap<DateTime,DataPoint<DateTime>> preComputeCache = new HashMap();
+  //final QuiverCache.MapCache<DateTime, DataPoint<DateTime>> preComputeCache = QuiverCache.MapCache();
 
   @override
   Widget build(BuildContext context) {
@@ -546,7 +546,7 @@ class ChartWrapper extends StatelessWidget {
             width: MediaQuery.of(context).size.width,
             child: StreamBuilder(
                 initialData: [],
-                stream: smsRetrieverBloc.datapointsStream,
+                stream: smsRetrieverBloc.dataPointStream,
                 builder: (_, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.done:
@@ -565,7 +565,7 @@ class ChartWrapper extends StatelessWidget {
                               label: "Balance",
                               lineColor: Colors.purpleAccent,
                               onMissingValue: (dateTime) {
-                                if (preComputeCache[dateTime] != null) {
+                                if ( preComputeCache[dateTime] != null) {
                                   return preComputeCache[dateTime].value;
                                 } else {
                                   DataPoint prev = data.lastWhere(
