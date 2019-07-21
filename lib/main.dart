@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:bezier_chart/bezier_chart.dart';
 import 'package:billie/widgets/history_tile.dart';
 import 'package:flutter/rendering.dart';
@@ -12,7 +14,6 @@ import 'package:billie/widgets/quick_stats.dart';
 import 'dart:math' as math;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
-
 import 'package:billie/widgets/custom_backdrop.dart';
 
 void main() => runApp(MyApp());
@@ -35,8 +36,7 @@ class MyApp extends StatelessWidget {
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
           primarySwatch: Colors.blue,
-          fontFamily: "GoogleSans"
-      ),
+          fontFamily: "GoogleSans"),
       home: BillieWallet(),
     );
   }
@@ -52,14 +52,14 @@ class BillieWallet extends StatefulWidget {
 
 class _BillieWalletState extends State<BillieWallet>
     with TickerProviderStateMixin {
-
   SmsRetrieverBloc smsRetrieverBloc;
   ScrollController _scrollController;
   Function listener;
   PanelModel panelModel;
 
   List<Widget> slivers;
-  GlobalKey<BackdropState> _globalBackdropKey = GlobalKey(debugLabel: "BackDropState");
+  GlobalKey<BackdropState> _globalBackdropKey =
+      GlobalKey(debugLabel: "BackDropState");
   ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
   @override
@@ -79,13 +79,12 @@ class _BillieWalletState extends State<BillieWallet>
     super.dispose();
   }
 
-
-  void switchScene(FrontPanels panelType){
+  void switchScene(FrontPanels panelType) {
     if (panelModel.activePanelType == panelType) {
       _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
     } else
       panelModel.activate(panelType);
-      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+    _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
   }
 
   @override
@@ -138,12 +137,17 @@ class _BillieWalletState extends State<BillieWallet>
     );
 
     slivers.add(
-      SliverPersistentHeader(pinned: true, floating: false, delegate: WalletStatistic()),
+      SliverPersistentHeader(
+          pinned: true, floating: false, delegate: WalletStatistic()),
     );
     slivers.add(
-      SliverToBoxAdapter(child: Container(height: 200, child: ChartWrapper()),),
+      SliverToBoxAdapter(
+        child: Container(height: 200, child: ChartWrapper()),
+      ),
     );
-    slivers.add(SliverToBoxAdapter(child: Divider(),));
+    slivers.add(SliverToBoxAdapter(
+      child: Divider(),
+    ));
     slivers.add(SliverToBoxAdapter(
       child: ListTile(
         dense: true,
@@ -172,22 +176,33 @@ class _BillieWalletState extends State<BillieWallet>
                 initialData: [],
                 stream: smsRetrieverBloc.historyChunks,
                 builder: (context, AsyncSnapshot<Object> snapshot) {
-                  return CustomScrollView(
-                    controller: _scrollController,
-                    physics: BouncingScrollPhysics(),
-                    key: PageStorageKey<String>("csrv"),
-                    slivers: slivers
-                      ..addAll(SliverSectionBuilder().create(snapshot)),
-                  );
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.done:
+                    case ConnectionState.active:
+                      if (snapshot.hasData) {
+                        return CustomScrollView(
+                          controller: _scrollController,
+                          physics: BouncingScrollPhysics(),
+                          key: PageStorageKey<String>("csrv"),
+                          slivers: slivers
+                            ..addAll(SliverSectionBuilder().create(snapshot)),
+                        );
+                      } else
+                        return Container();
+                      break;
+                    default:
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                  }
                 }),
           );
         },
       );
     }
 
-
-    Widget renderDrawerListItems(){
-      return  ListView(
+    Widget renderDrawerListItems() {
+      return ListView(
         physics: BouncingScrollPhysics(),
         // Important: Remove any padding from the ListView.
         padding: EdgeInsets.zero,
@@ -197,12 +212,12 @@ class _BillieWalletState extends State<BillieWallet>
                 image: DecorationImage(
                     fit: BoxFit.cover,
                     image: NetworkImage(
-                      "https://source.unsplash.com/640x480/?money",
+                      "https://source.unsplash.com/640x480/?money+currency",
                     )),
               ),
               child: Stack(children: [
                 Positioned(
-                  //left: 0,
+                    //left: 0,
                     bottom: 0,
                     child: CircleAvatar(
                       radius: 32.0,
@@ -211,7 +226,7 @@ class _BillieWalletState extends State<BillieWallet>
                           child: FadeInImage.memoryNetwork(
                               placeholder: kTransparentImage,
                               image:
-                              "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
+                                  "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
                     )),
               ])),
           ListTile(
@@ -315,9 +330,9 @@ class _BillieWalletState extends State<BillieWallet>
 
     return WillPopScope(
       onWillPop: () async {
-        if(panelVisible.value){
+        if (panelVisible.value) {
           _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
-          return  false;
+          return false;
         } else
           return true;
       },
@@ -325,14 +340,15 @@ class _BillieWalletState extends State<BillieWallet>
           backgroundColor: Colors.white,
           floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
           floatingActionButton: FloatingActionButton(
-              child: Icon(FontAwesomeIcons.handHoldingUsd,size: 16.0,),
+              child: Icon(
+                FontAwesomeIcons.handHoldingUsd,
+                size: 16.0,
+              ),
               backgroundColor: Colors.purpleAccent,
-              onPressed: (){
+              onPressed: () {
                 //_scrollController.animateTo(0.0, duration: Duration(seconds: 1), curve: Curves.easeOut);
               }),
-          drawer: Drawer(
-            child: renderDrawerListItems()
-          ),
+          drawer: Drawer(child: renderDrawerListItems()),
           //color: Colors.purpleAccent,
           body: SafeArea(
               child: MPMessagesProvider(
@@ -364,6 +380,7 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return StreamBuilder(
+        initialData: null,
         stream: smsRetrieverBloc.statsStream,
         builder: (c, snapshot) {
           switch (snapshot.connectionState) {
@@ -516,6 +533,8 @@ class SliverSectionBuilder {
 }
 
 class ChartWrapper extends StatelessWidget {
+  final HashMap<DateTime,DataPoint<DateTime>> preComputeCache = new HashMap();
+  //final QuiverCache.MapCache<DateTime, DataPoint<DateTime>> preComputeCache = QuiverCache.MapCache();
 
   @override
   Widget build(BuildContext context) {
@@ -526,12 +545,13 @@ class ChartWrapper extends StatelessWidget {
             height: MediaQuery.of(context).size.height / 2,
             width: MediaQuery.of(context).size.width,
             child: StreamBuilder(
-                stream: smsRetrieverBloc.datapointsStream,
+                initialData: [],
+                stream: smsRetrieverBloc.dataPointStream,
                 builder: (_, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.done:
                     case ConnectionState.active:
-                      var data = snapshot.data as List<DataPoint>;
+                      var data = snapshot.data as List<DataPoint<DateTime>>;
                       return Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: BezierChart(
@@ -542,13 +562,21 @@ class ChartWrapper extends StatelessWidget {
                           //xAxisCustomValues: (snapshot.data as List<MPMessage>).map((m) => m.txDate).toList(),
                           series: [
                             BezierLine(
-                              label: "Duty",
+                              label: "Balance",
                               lineColor: Colors.purpleAccent,
                               onMissingValue: (dateTime) {
-                                return math.Random().nextDouble() * 5000;
+                                if ( preComputeCache[dateTime] != null) {
+                                  return preComputeCache[dateTime].value;
+                                } else {
+                                  DataPoint prev = data.lastWhere(
+                                          (e) => dateTime.isBefore(e.xAxis),
+                                      orElse: () => data.last);
+                                  preComputeCache[dateTime] = prev;
+                                  return prev.value;
+                                }
                               },
                               data: snapshot.data,
-                            )
+                            ),
                           ],
                           config: BezierChartConfig(
                             verticalIndicatorStrokeWidth: 3.0,

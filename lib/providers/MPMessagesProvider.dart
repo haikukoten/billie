@@ -11,7 +11,7 @@ class MPMessagesProvider extends InheritedWidget {
 
   MPMessagesProvider({Key key, Widget child, SmsRetrieverBloc sBloc})
       : this.smsRetrieverBloc =
-            sBloc ?? SmsRetrieverBloc(SmsServiceProxy.getInstance(), ContactServiceProxy.getInstance()),
+            sBloc ?? SmsRetrieverBloc(SmsServiceProxy(), ContactServiceProxy.getInstance()),
         super(key: key, child: child);
 
   //Prototyped - avoid using this call due to performance limitations within deeply nested widgets
