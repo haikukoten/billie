@@ -11,7 +11,6 @@ import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
 import 'package:flutter/material.dart';
 import 'package:billie/widgets/quick_stats.dart';
-import 'dart:math' as math;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:billie/widgets/custom_backdrop.dart';
@@ -50,6 +49,14 @@ class BillieWallet extends StatefulWidget {
   _BillieWalletState createState() => _BillieWalletState();
 }
 
+enum HandleDrawer {
+  HANDLE_ACCOUNT_SETTINGS,
+  HANDLE_BACKUP_ACTION,
+  HANDLE_RESTORE_ACTION,
+  HANDLE_SETTINGS_ACTION,
+  HANDLE_FEEDBACK
+}
+
 class _BillieWalletState extends State<BillieWallet>
     with TickerProviderStateMixin {
   SmsRetrieverBloc smsRetrieverBloc;
@@ -62,34 +69,40 @@ class _BillieWalletState extends State<BillieWallet>
       GlobalKey(debugLabel: "BackDropState");
   ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
+  final List<Map<String, dynamic>> _drawerItems = [
+    {
+      "name": "Account",
+      "subtitle": "Manage your account",
+      "action": HandleDrawer.HANDLE_ACCOUNT_SETTINGS,
+      "icon": FontAwesomeIcons.userCircle
+    },
+    {
+      "name": "Backup",
+      "subtitle": "Create and Manage backups",
+      "action": HandleDrawer.HANDLE_ACCOUNT_SETTINGS,
+      "icon": FontAwesomeIcons.cloudUploadAlt
+    },
+    {
+      "name": "Settings",
+      "subtitle": "Configure the application",
+      "action": HandleDrawer.HANDLE_ACCOUNT_SETTINGS,
+      "icon": FontAwesomeIcons.toolbox
+    },
+    {
+      "name": "Feedback",
+      "subtitle": "Give us your opinion ;)",
+      "action": HandleDrawer.HANDLE_ACCOUNT_SETTINGS,
+      "icon": FontAwesomeIcons.connectdevelop
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
     slivers = List<Widget>();
     _scrollController = ScrollController();
     panelModel = PanelModel(FrontPanels.searchPanel);
-    //panelVisible.value = true;
-  }
-
-  @override
-  void dispose() {
-    //_scrollController.removeListener(listener);
-    smsRetrieverBloc.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void switchScene(FrontPanels panelType) {
-    if (panelModel.activePanelType == panelType) {
-      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
-    } else
-      panelModel.activate(panelType);
-    _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    slivers.add(
+    slivers.addAll([
       SliverAppBar(
         pinned: false,
         floating: true,
@@ -134,75 +147,112 @@ class _BillieWalletState extends State<BillieWallet>
               }),
         ],
       ),
-    );
-
-    slivers.add(
       SliverPersistentHeader(
           pinned: true, floating: false, delegate: WalletStatistic()),
-    );
-    slivers.add(
       SliverToBoxAdapter(
         child: Container(height: 200, child: ChartWrapper()),
       ),
-    );
-    slivers.add(SliverToBoxAdapter(
-      child: Divider(),
-    ));
-    slivers.add(SliverToBoxAdapter(
-      child: ListTile(
-        dense: true,
-        trailing: Icon(
-          FontAwesomeIcons.history, size: 14.0,
-          color: Colors.blueGrey.withOpacity(0.5), //: Colors.purple.
-        ),
-        title: const Text(
-          "TRANSACTION HISTORY",
-          style: const TextStyle(
-              color: Colors.blueGrey,
-              letterSpacing: 1.0,
-              fontWeight: FontWeight.bold,
-              fontSize: 10.0),
-        ),
+      SliverToBoxAdapter(
+        child: Divider(),
       ),
-    ));
+      SliverToBoxAdapter(
+        child: ListTile(
+          dense: true,
+          trailing: Icon(
+            FontAwesomeIcons.history, size: 14.0,
+            color: Colors.blueGrey.withOpacity(0.5), //: Colors.purple.
+          ),
+          title: const Text(
+            "TRANSACTION HISTORY",
+            style: const TextStyle(
+                color: Colors.blueGrey,
+                letterSpacing: 1.0,
+                fontWeight: FontWeight.bold,
+                fontSize: 10.0),
+          ),
+        ),
+      )
+    ]);
+  }
 
-    Widget _createScrollViewArea() {
-      return Builder(
-        builder: (innerContext) {
-          smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
-          return Material(
-            color: Colors.white,
-            child: StreamBuilder<Object>(
-                initialData: [],
-                stream: smsRetrieverBloc.historyChunks,
-                builder: (context, AsyncSnapshot<Object> snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.done:
-                    case ConnectionState.active:
-                      if (snapshot.hasData) {
-                        return CustomScrollView(
-                          controller: _scrollController,
-                          physics: BouncingScrollPhysics(),
-                          key: PageStorageKey<String>("csrv"),
-                          slivers: slivers
-                            ..addAll(SliverSectionBuilder().create(snapshot)),
-                        );
-                      } else
-                        return Container();
-                      break;
-                    default:
-                      return Center(
-                        child: CircularProgressIndicator(),
+  @override
+  void dispose() {
+    //_scrollController.removeListener(listener);
+    smsRetrieverBloc.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void switchScene(FrontPanels panelType) {
+    if (panelModel.activePanelType == panelType) {
+      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+    } else
+      panelModel.activate(panelType);
+    _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+  }
+
+  Widget _createScrollViewArea() {
+    return Builder(
+      builder: (innerContext) {
+        smsRetrieverBloc = MPMessagesProvider.smsBlocOf(innerContext);
+        return Material(
+          color: Colors.white,
+          child: StreamBuilder<Map<DateTime,List<dynamic>>>(
+              initialData: {},
+              stream: smsRetrieverBloc.historyChunks,
+              builder: (context, AsyncSnapshot<Map<DateTime,List<dynamic>>> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.done:
+                  case ConnectionState.active:
+                    if (snapshot.hasData) {
+                      return CustomScrollView(
+                        controller: _scrollController,
+                        physics: BouncingScrollPhysics(),
+                        key: PageStorageKey<String>("csrv"),
+                        slivers: slivers
+                          ..addAll(SliverSectionBuilder().create(snapshot)),
                       );
-                  }
-                }),
-          );
-        },
-      );
-    }
+                    } else
+                      return Container();
+                    break;
+                  default:
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                }
+              }),
+        );
+      },
+    );
+  }
 
-    Widget renderDrawerListItems() {
-      return ListView(
+  void handleDrawerAction(HandleDrawer handle) {
+    print("Handling ${handle.toString()}");
+  }
+
+  Widget _fromDrawerMap(Map<String, dynamic> _drawer) {
+    return ListTile(
+      dense: true,
+      leading: IconButton(
+        icon: Icon(_drawer['icon']),
+        iconSize: 16.0,
+        color: Colors.purpleAccent,
+        onPressed: () {},
+      ),
+      //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
+      title: Text(
+        _drawer['name'],
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(_drawer['subtitle']),
+      onTap: () {
+        handleDrawerAction(_drawer['action']);
+      },
+    );
+  }
+
+  Widget renderDrawerListItems() {
+    return ListView(
         physics: BouncingScrollPhysics(),
         // Important: Remove any padding from the ListView.
         padding: EdgeInsets.zero,
@@ -226,116 +276,25 @@ class _BillieWalletState extends State<BillieWallet>
                           child: FadeInImage.memoryNetwork(
                               placeholder: kTransparentImage,
                               image:
-                                  "https://randomuser.me/api/portraits/women/${math.Random().nextInt(99)}.jpg")),
+                                  "https://randomuser.me/api/portraits/women/7.jpg")),
                     )),
               ])),
-          ListTile(
-            dense: true,
-            leading: IconButton(
-              icon: Icon(FontAwesomeIcons.userCircle),
-              iconSize: 16.0,
-              color: Colors.purpleAccent,
-              onPressed: () {},
-            ),
-            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-            title: Text(
-              'Account',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Manage your account"),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-          ListTile(
-            dense: true,
-            leading: IconButton(
-              icon: Icon(FontAwesomeIcons.cloudUploadAlt),
-              iconSize: 16.0,
-              color: Colors.purpleAccent,
-              onPressed: () {},
-            ),
-            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-            title: Text(
-              'Backup',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Select backup location"),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-          ListTile(
-            dense: true,
-            leading: IconButton(
-              icon: Icon(FontAwesomeIcons.cloudDownloadAlt),
-              iconSize: 16.0,
-              color: Colors.purpleAccent,
-              onPressed: () {},
-            ),
-            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-            title: Text(
-              'Restore',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Restore from previous backup"),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-          ListTile(
-            dense: true,
-            leading: IconButton(
-              icon: Icon(FontAwesomeIcons.toolbox),
-              iconSize: 16.0,
-              color: Colors.purpleAccent,
-              onPressed: () {},
-            ),
-            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-            title: Text(
-              'Settings',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Configure application settings"),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-          ListTile(
-            dense: true,
-            leading: IconButton(
-              icon: Icon(FontAwesomeIcons.connectdevelop),
-              iconSize: 16.0,
-              color: Colors.purpleAccent,
-              onPressed: () {},
-            ),
-            //trailing: Icon(FontAwesomeIcons.googleDrive, size: 16.0,),
-            title: Text(
-              'Feedback',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text("Contact developer"),
-            onTap: () {
-              // Update the state of the app.
-              // ...
-            },
-          ),
-        ],
-      );
-    }
+        ]..addAll(List.generate(_drawerItems.length,
+            (index) => _fromDrawerMap(_drawerItems[index]))));
+  }
 
+  Future<bool> _asyncBackPressHandler() async {
+    if (panelVisible.value) {
+      _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+      return false;
+    } else
+      return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        if (panelVisible.value) {
-          _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
-          return false;
-        } else
-          return true;
-      },
+      onWillPop: _asyncBackPressHandler,
       child: Scaffold(
           backgroundColor: Colors.white,
           floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
@@ -360,7 +319,7 @@ class _BillieWalletState extends State<BillieWallet>
                 ),
                 frontHeaderVisibleClosed: false,
                 frontHeaderHeight: 35.0,
-                frontHeader: Center(
+                frontHeader: const Center(
                   child: Icon(FontAwesomeIcons.gripHorizontal),
                 ),
                 frontPanelOpenHeight: 72.0,
@@ -374,6 +333,13 @@ class _BillieWalletState extends State<BillieWallet>
 
 class WalletStatistic extends SliverPersistentHeaderDelegate {
   SmsRetrieverBloc smsRetrieverBloc;
+
+  static const double _kElevationOnMinShrinkOffset = 0.0;
+  static const double _kElevationOnOtherShrinkOffset = 2.0;
+  static const double _kMaxExtent = 136.0;
+  static const double _kMinExtent = 109.0;
+  static const double _kHorizontalCardPadding = 16.0;
+  static const double _kVerticalCardPadding = 8.0;
 
   @override
   Widget build(
@@ -390,29 +356,32 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
                   ? Card(
                       color: Colors.white,
                       margin: EdgeInsets.all(0.0),
-                      elevation: shrinkOffset == 0 ? 0.0 : 2.0,
+                      elevation: shrinkOffset == 0
+                          ? _kElevationOnMinShrinkOffset
+                          : _kElevationOnOtherShrinkOffset,
                       //elevation: 2.0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0.0),
+                        borderRadius: BorderRadius.zero,
                       ),
                       //height: 182.0,
                       //padding:EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       //alignment: Alignment.center,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 8.0),
+                            horizontal: _kHorizontalCardPadding,
+                            vertical: _kVerticalCardPadding),
                         child: WalletBalanceWidget(snapshot.data),
                       ))
                   : Container(
-                      height: 200,
+                      height: _kMinExtent,
                       alignment: Alignment.center,
-                      child: Text("Sanity -> No Data, Stats"));
+                      child: CircularProgressIndicator());
               break;
             default:
               return Container(
-                  height: 200,
+                  height: _kMinExtent,
                   alignment: Alignment.center,
-                  child: Text("Sanity -> No Data, Stats"));
+                  child: CircularProgressIndicator());
           }
         });
   }
@@ -423,10 +392,10 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 136.0;
+  double get maxExtent => _kMaxExtent;
 
   @override
-  double get minExtent => 109.0;
+  double get minExtent => _kMinExtent;
 }
 
 class WalletBalanceWidget extends StatelessWidget {
@@ -444,6 +413,14 @@ class WalletBalanceWidget extends StatelessWidget {
 }
 
 class SliverSectionBuilder {
+
+  static const double _kTitleTextSize = 12.0;
+  static const double _kPinnedElevation = 2.0;
+  static const double _kUnpinnedElevation = 2.0;
+  static const double _kTitleHorizontalPadding = 16.0;
+  static const double _kTitleVerticalPadding = 8.0;
+  static const double _kTitleHeight = 30.0;
+
   static const months = [
     "Jan",
     "Feb",
@@ -463,64 +440,63 @@ class SliverSectionBuilder {
     return "${f[0].toUpperCase()}${f.substring(1)}";
   }
 
-  List<Widget> create(AsyncSnapshot items) {
-    //var keys = items.keys.toList();
-    //var values = items.values.toList();
+  Widget _createTitle(SliverStickyHeaderState state, DateTime _dateKey){
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: new Text(
+            DateTime.now().difference(_dateKey) < Duration(days: 30)
+                ? '${timeago.format(_dateKey).toUpperCase()}'
+                : '${timeago.format(_dateKey).toUpperCase()} on ${months[(_dateKey.month - 1)]} ${_dateKey.day ?? "Unknown"}',
+            style: TextStyle(
+                fontSize: _kTitleTextSize,
+                fontFamily: "Raleway",
+                fontWeight: FontWeight.bold,
+                color:
+                state.isPinned ? Colors.purple : Colors.purple.withOpacity(0.7)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _createCardSection(AsyncSnapshot _items, DateTime _dateKey) {
+    return SliverStickyHeaderBuilder(
+        builder: (context, state) {
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            elevation: state.isPinned ? (_kPinnedElevation) : _kUnpinnedElevation,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0)),
+            //padding: const EdgeInsets.all(8.0),
+            child: new Container(
+              height: _kTitleHeight,
+              color: Colors.white.withOpacity(0.7),
+              margin:const EdgeInsets.symmetric(
+                  horizontal: _kTitleHorizontalPadding,
+                  vertical: _kTitleVerticalPadding),
+              alignment: Alignment.centerLeft,
+              child: _createTitle(state, _dateKey)
+            ),
+          );
+        },
+        sliver: new SliverList(
+          delegate: new SliverChildBuilderDelegate(
+            (context, index) => HistoryTile(_items.data[_dateKey][index]),
+            childCount: _items.data[_dateKey].length,
+          ),
+        ));
+  }
+
+  List<Widget> create(AsyncSnapshot<Map<DateTime, List>> items) {
     switch (items.connectionState) {
       case ConnectionState.done:
       case ConnectionState.waiting:
       case ConnectionState.active:
         if (items.hasData) {
-          return (items.data as Map<DateTime, List>)
+          return (items.data)
               .keys
-              .map((DateTime dateKey) => SliverStickyHeaderBuilder(
-                  builder: (context, state) {
-                    return Card(
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      elevation: state.isPinned
-                          ? (2.0)
-                          : 1.0 - (state.scrollPercentage),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0)),
-                      //padding: const EdgeInsets.all(8.0),
-                      child: new Container(
-                        height: 30.0,
-                        color: Colors.white.withOpacity(
-                            math.min(0.5, 1.0 - state.scrollPercentage)),
-                        margin: EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 8.0),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: new Text(
-                                DateTime.now().difference(dateKey) <
-                                        Duration(days: 30)
-                                    ? '${timeago.format(dateKey).toUpperCase()}'
-                                    //Error accessing dates here!! debug!
-                                    : '${timeago.format(dateKey).toUpperCase()} on ${months[(dateKey.month - 1)]} ${dateKey.day ?? "Unknown"}',
-                                style: TextStyle(
-                                    fontSize: 12.0,
-                                    fontFamily: "Raleway",
-                                    fontWeight: FontWeight.bold,
-                                    color: state.isPinned
-                                        ? Colors.purple
-                                        : Colors.purple.withOpacity(0.7)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  sliver: new SliverList(
-                    delegate: new SliverChildBuilderDelegate(
-                      (context, index) =>
-                          HistoryTile(items.data[dateKey][index]),
-                      childCount: items.data[dateKey].length,
-                    ),
-                  )))
+              .map((DateTime dateKey) => _createCardSection(items, dateKey))
               .toList();
         } else {
           return [];
@@ -533,7 +509,7 @@ class SliverSectionBuilder {
 }
 
 class ChartWrapper extends StatelessWidget {
-  final HashMap<DateTime,DataPoint<DateTime>> preComputeCache = new HashMap();
+  final HashMap<DateTime, DataPoint<DateTime>> preComputeCache = new HashMap();
   //final QuiverCache.MapCache<DateTime, DataPoint<DateTime>> preComputeCache = QuiverCache.MapCache();
 
   @override
@@ -565,11 +541,11 @@ class ChartWrapper extends StatelessWidget {
                               label: "Balance",
                               lineColor: Colors.purpleAccent,
                               onMissingValue: (dateTime) {
-                                if ( preComputeCache[dateTime] != null) {
+                                if (preComputeCache[dateTime] != null) {
                                   return preComputeCache[dateTime].value;
                                 } else {
                                   DataPoint prev = data.lastWhere(
-                                          (e) => dateTime.isBefore(e.xAxis),
+                                      (e) => dateTime.isBefore(e.xAxis),
                                       orElse: () => data.last);
                                   preComputeCache[dateTime] = prev;
                                   return prev.value;
