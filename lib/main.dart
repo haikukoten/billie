@@ -1,19 +1,19 @@
 import 'dart:collection';
 
 import 'package:bezier_chart/bezier_chart.dart';
-import 'package:billie/widgets/history_tile.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:billie/blocs/sms_retriever_bloc.dart';
-import 'package:scoped_model/scoped_model.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:billie/providers/MPMessagesProvider.dart';
 import 'package:billie/proxy/sms_service_proxy.dart';
-import 'package:flutter/material.dart';
-import 'package:billie/widgets/quick_stats.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:billie/widgets/custom_backdrop.dart';
+import 'package:billie/widgets/history_tile.dart';
+import 'package:billie/widgets/quick_stats.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:transparent_image/transparent_image.dart';
 
 void main() => runApp(MyApp());
 
@@ -61,12 +61,11 @@ class _BillieWalletState extends State<BillieWallet>
     with TickerProviderStateMixin {
   SmsRetrieverBloc smsRetrieverBloc;
   ScrollController _scrollController;
-  Function listener;
-  PanelModel panelModel;
+  PanelModel _panelModel;
 
   List<Widget> slivers;
-  GlobalKey<BackdropState> _globalBackdropKey =
-      GlobalKey(debugLabel: "BackDropState");
+  GlobalKey<BackdropState> _globalBackdropKey = GlobalKey(
+      debugLabel: "BackDropState");
   ValueNotifier<bool> panelVisible = ValueNotifier(false);
 
   final List<Map<String, dynamic>> _drawerItems = [
@@ -96,83 +95,102 @@ class _BillieWalletState extends State<BillieWallet>
     },
   ];
 
+  static const double _kAppBarExpandedHeight = 64.0;
+  static const double _kSliverIconButtonSize = 16.0;
+  static const double _kChartHeight = 200.0;
+
   @override
   void initState() {
     super.initState();
     slivers = List<Widget>();
     _scrollController = ScrollController();
-    panelModel = PanelModel(FrontPanels.searchPanel);
+    _panelModel = PanelModel(FrontPanels.searchPanel);
     slivers.addAll([
-      SliverAppBar(
-        pinned: false,
-        floating: true,
-        expandedHeight: 64.0,
-        backgroundColor: Colors.white,
-        title: Text(
-          "Billie",
-          style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              //letterSpacing: 1.0,
-              fontFamily: "Raleway"),
-        ),
-        centerTitle: true,
-        elevation: 0.0,
-        leading: Builder(
-            //stream: null,
-            builder: (innerContext) {
-          return IconButton(
-              iconSize: 16.0,
-              icon: Icon(
-                FontAwesomeIcons.bars,
-                color: Colors.black,
-              ),
-              onPressed: () {
-                ScaffoldState _scaffoldState = Scaffold.of(innerContext);
-                !_scaffoldState.isDrawerOpen
-                    ? _scaffoldState.openDrawer()
-                    : _scaffoldState.isDrawerOpen;
-              });
-        }),
-        actions: <Widget>[
-          IconButton(
-              iconSize: 16.0,
-              icon: Icon(
-                FontAwesomeIcons.wallet,
-                color: Colors.black,
-              ),
-              onPressed: () {
-                //TODO: Use stack with some sort of handler for wallet functions
-                _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
-              }),
-        ],
-      ),
-      SliverPersistentHeader(
-          pinned: true, floating: false, delegate: WalletStatistic()),
-      SliverToBoxAdapter(
-        child: Container(height: 200, child: ChartWrapper()),
-      ),
-      SliverToBoxAdapter(
-        child: Divider(),
-      ),
-      SliverToBoxAdapter(
-        child: ListTile(
-          dense: true,
-          trailing: Icon(
-            FontAwesomeIcons.history, size: 14.0,
-            color: Colors.blueGrey.withOpacity(0.5), //: Colors.purple.
-          ),
-          title: const Text(
-            "TRANSACTION HISTORY",
-            style: const TextStyle(
-                color: Colors.blueGrey,
-                letterSpacing: 1.0,
-                fontWeight: FontWeight.bold,
-                fontSize: 10.0),
-          ),
-        ),
-      )
+      _getAppBar(),
+      _getPersistentDelegate(),
+      _getChart(),
+      SliverToBoxAdapter(child: Divider(),),
+      _getHistoryTitle()
     ]);
+  }
+
+
+  Widget _getAppBar() {
+    return SliverAppBar(
+      pinned: false,
+      floating: true,
+      expandedHeight: _kAppBarExpandedHeight,
+      backgroundColor: Colors.white,
+      title: Text(
+        "Billie",
+        style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            //letterSpacing: 1.0,
+            fontFamily: "Raleway"),
+      ),
+      centerTitle: true,
+      elevation: 0.0,
+      leading: Builder(
+        //stream: null,
+          builder: (innerContext) {
+            return IconButton(
+                iconSize: _kSliverIconButtonSize,
+                icon: Icon(
+                  FontAwesomeIcons.bars,
+                  color: Colors.black,
+                ),
+                onPressed: () {
+                  ScaffoldState _scaffoldState = Scaffold.of(innerContext);
+                  !_scaffoldState.isDrawerOpen
+                      ? _scaffoldState.openDrawer()
+                      : _scaffoldState.isDrawerOpen;
+                });
+          }),
+      actions: <Widget>[
+        IconButton(
+            iconSize: _kSliverIconButtonSize,
+            icon: Icon(
+              FontAwesomeIcons.wallet,
+              color: Colors.black,
+            ),
+            onPressed: () {
+              //TODO: Use stack with some sort of handler for wallet functions
+              _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
+            }),
+      ],
+    );
+  }
+
+  Widget _getPersistentDelegate() {
+    return SliverPersistentHeader(
+        pinned: true, floating: false, delegate: WalletStatistic());
+  }
+
+  Widget _getChart() {
+    return SliverToBoxAdapter(
+      child: Container(height: _kChartHeight, child: ChartWrapper()),
+    );
+  }
+
+  Widget _getHistoryTitle() {
+    return SliverToBoxAdapter(
+      child: ListTile(
+        dense: true,
+        trailing: Icon(
+          FontAwesomeIcons.history, size: _kSliverIconButtonSize,
+          color: Colors.blueGrey.withOpacity(0.5), //: Colors.purple.
+        ),
+        title: const Text(
+          "TRANSACTION HISTORY",
+          style: const TextStyle(
+              color: Colors.blueGrey,
+              letterSpacing: 1.0,
+              fontWeight: FontWeight.bold,
+              fontSize: 10.0),
+        ),
+      ),
+    );
   }
 
   @override
@@ -184,10 +202,10 @@ class _BillieWalletState extends State<BillieWallet>
   }
 
   void switchScene(FrontPanels panelType) {
-    if (panelModel.activePanelType == panelType) {
+    if (_panelModel.activePanelType == panelType) {
       _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
     } else
-      panelModel.activate(panelType);
+      _panelModel.activate(panelType);
     _globalBackdropKey.currentState.toggleBackdropPanelVisibility();
   }
 
@@ -235,7 +253,7 @@ class _BillieWalletState extends State<BillieWallet>
       dense: true,
       leading: IconButton(
         icon: Icon(_drawer['icon']),
-        iconSize: 16.0,
+        iconSize: _kSliverIconButtonSize,
         color: Colors.purpleAccent,
         onPressed: () {},
       ),
@@ -301,7 +319,7 @@ class _BillieWalletState extends State<BillieWallet>
           floatingActionButton: FloatingActionButton(
               child: Icon(
                 FontAwesomeIcons.handHoldingUsd,
-                size: 16.0,
+                size: _kSliverIconButtonSize,
               ),
               backgroundColor: Colors.purpleAccent,
               onPressed: () {
@@ -314,7 +332,7 @@ class _BillieWalletState extends State<BillieWallet>
             child: Backdrop(
                 key: _globalBackdropKey,
                 frontLayer: ScopedModel<PanelModel>(
-                  model: panelModel,
+                  model: _panelModel,
                   child: SearchPanel(),
                 ),
                 frontHeaderVisibleClosed: false,
@@ -342,8 +360,8 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
   static const double _kVerticalCardPadding = 8.0;
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context, double shrinkOffset,
+      bool overlapsContent) {
     smsRetrieverBloc = MPMessagesProvider.smsBlocOf(context);
     return StreamBuilder(
         initialData: null,
@@ -355,7 +373,7 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
               return snapshot.hasData
                   ? Card(
                       color: Colors.white,
-                      margin: EdgeInsets.all(0.0),
+                  margin: EdgeInsets.zero,
                       elevation: shrinkOffset == 0
                           ? _kElevationOnMinShrinkOffset
                           : _kElevationOnOtherShrinkOffset,
@@ -375,13 +393,13 @@ class WalletStatistic extends SliverPersistentHeaderDelegate {
                   : Container(
                       height: _kMinExtent,
                       alignment: Alignment.center,
-                      child: CircularProgressIndicator());
+                  child: const CircularProgressIndicator());
               break;
             default:
               return Container(
                   height: _kMinExtent,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator());
+                  child: const CircularProgressIndicator());
           }
         });
   }
@@ -420,6 +438,11 @@ class SliverSectionBuilder {
   static const double _kTitleHorizontalPadding = 16.0;
   static const double _kTitleVerticalPadding = 8.0;
   static const double _kTitleHeight = 30.0;
+  static const double _kOpacity = 0.7;
+  static const double _kHorizontalTitlePadding = 8.0;
+  static const double _kVerticalTitlePadding = 4.0;
+  static const double _kCircularBorderRadius = 8.0;
+  static const int _kMinDiffDays = 30;
 
   static const months = [
     "Jan",
@@ -445,7 +468,7 @@ class SliverSectionBuilder {
       children: <Widget>[
         Expanded(
           child: new Text(
-            DateTime.now().difference(_dateKey) < Duration(days: 30)
+            DateTime.now().difference(_dateKey) < Duration(days: _kMinDiffDays)
                 ? '${timeago.format(_dateKey).toUpperCase()}'
                 : '${timeago.format(_dateKey).toUpperCase()} on ${months[(_dateKey.month - 1)]} ${_dateKey.day ?? "Unknown"}',
             style: TextStyle(
@@ -464,14 +487,17 @@ class SliverSectionBuilder {
     return SliverStickyHeaderBuilder(
         builder: (context, state) {
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            margin: const EdgeInsets.symmetric(
+                horizontal: _kHorizontalTitlePadding,
+                vertical: _kVerticalTitlePadding
+            ),
             elevation: state.isPinned ? (_kPinnedElevation) : _kUnpinnedElevation,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0)),
+                borderRadius: BorderRadius.circular(_kCircularBorderRadius)),
             //padding: const EdgeInsets.all(8.0),
             child: new Container(
               height: _kTitleHeight,
-              color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withOpacity(_kOpacity),
               margin:const EdgeInsets.symmetric(
                   horizontal: _kTitleHorizontalPadding,
                   vertical: _kTitleVerticalPadding),
@@ -499,11 +525,11 @@ class SliverSectionBuilder {
               .map((DateTime dateKey) => _createCardSection(items, dateKey))
               .toList();
         } else {
-          return [];
+          return const [];
         }
         break;
       default:
-        return [];
+        return const [];
     }
   }
 }
