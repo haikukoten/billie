@@ -2,7 +2,9 @@
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
 </p>
-
+<p>
+  <img  alt="Screenshot" src="https://https://raw.githubusercontent.com/kituyiharry/billie/develop/device-screenshot.png"/>
+</p>
 > Mobile Transaction analytics for everyone
 
 ## Install
