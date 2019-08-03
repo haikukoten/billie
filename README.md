@@ -1,16 +1,25 @@
-# billie
+<h1 align="center">Welcome to Billie 👋</h1>
+<p>
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+</p>
 
-Mobile money transactions ledger and Backup utilities
+> Mobile Transaction analytics for everyone
 
-## Getting Started
+## Install
 
-This project is a starting point for a Flutter application.
+```sh
+flutter run [--debug||--release||--profile]
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Author
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+👤 **Harry Kituyi **
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+* Github: [@kituyiharry](https://github.com/kituyiharry)
+
+## Show your support
+
+Give a ⭐️ if this project helped you!
+
+***
+_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
