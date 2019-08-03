@@ -71,12 +71,6 @@ class SmsRetrieverBloc {
       _mpesaSmsController.sink.add(data);
     });
 
-    Future.delayed(Duration(seconds: 10), (){
-      smsServiceProxy.getSmsMessages().then((List data) {
-        _mpesaSmsController.sink.add(data);
-      });
-    });
-
     contactServiceProxy.getContacts().then((data) {
       _myContactsController.sink.add(data);
     });
